@@ -73,15 +73,10 @@ def loginMethod(email, password):
 def imageMethod(fileName): # UPLOAD
     cloudStorageFormat = f"images/{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}{os.path.splitext(fileName)[1].lower()}"
     storage.child(cloudStorageFormat).put(fileName)
-    imageData = {
-        'imageId': generatePrivateUniqueId('ImageId'),
-        'filePath':cloudStorageFormat
-    }
-    return imageData
-
+    return cloudStorageFormat
 
 app = Flask(__name__)
-app.secret_key = 'askeragob'
+app.secret_key = os.getenv('SECRET_KEY')
 
 @app.route('/')
 def host():
@@ -162,19 +157,14 @@ def auth_status():
             }
         ), 401
 
-# @app.route('/user')
-# def user():
-#     users = db.child("users").get()
-#     for user in users.each():
-#         return jsonify(user.val())
-
 @app.route('/products', methods=['GET', 'POST'])
 def products():
     lastId = db.child('products').child('lastId').get().val()
     if 'loggedIn' in session:
+        lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
         if request.method == 'GET':
             productId = request.args.get('id')
-            myProducts = list(map(lambda x: db.child('products').child(x).get().val(), db.child('users').child(session['userId']).child('products').get().val()))
+            myProducts = list(map(lambda x: db.child('products').child(x).get().val(), db.child('users').child(session['userId']).child('productsOwned').get().val()))
             x = [i if i['productId'] == int(productId) else None for i in myProducts]
             if productId is None:
                 return jsonify({
@@ -182,13 +172,25 @@ def products():
                 }), 200
             else:
                 return jsonify({
-                    "myProduct": list(filter(lambda x: x['productId'] == int(productId), myProducts))[0]
+                    "myProduct": list(filter(lambda x: x['productId'] == int(productId), myProducts))[0],
                 }), 200
         elif request.method == 'POST':
-            fileName = "G:\Sticker\E4-Ox_VVUAYW6HT.jpg"
-            imageId = imageMethod(fileName)['imageId']
-            filePath = imageMethod(fileName)['filePath']
-            return db.child('users').child().child("filePath").set(filePath)
+            uploadedFile = request.form['uploadedFile']
+            name = request.form['name']
+            desc = "" if not 'desc' in request.form else request.form['desc']
+
+            imagePath = imageMethod(uploadedFile)
+            db.child('products').child(f'productId-{lastId+1}').set({
+                'imagePath':imagePath,
+                'name':name,
+                'productId': lastId+1,
+                'ownedBy':session['userId'],
+                'desc':desc
+            })
+            db.child('products').child('lastId').set(lastId+1)
+            db.child('users').child(session['userId']).child('productsOwned').child(lastIdByUser).set(f'productId-{lastId+1}')
+            return jsonify({"status":db.child('users').child(session['userId']).get().val()})
+            
     else:
         return redirect(url_for('auth_status'))
     
