@@ -4,6 +4,7 @@ from requests.exceptions import HTTPError
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from dotenv import load_dotenv, dotenv_values
 from firebase_admin import credentials, db
+import asyncio
 
 load_dotenv()
 
@@ -24,10 +25,10 @@ auth = firebase.auth()
 storage = firebase.storage()
 db = firebase.database()
 
-def generatePrivateUniqueId(adder):
+def generatePrivateUniqueId(adder, length):
     characters = 'qwertyuiopasdfghjklzxcvbnm' + '1234567890'
-    unique_id = ''.join(random.choices(characters, k=10))
-    return "bogareksa"+adder+"-"+unique_id.lower()
+    unique_id = ''.join(random.choices(characters, k=length))
+    return adder+"-"+unique_id.lower()
 
 def registerMethod(email, password):
     try:
@@ -68,7 +69,6 @@ def loginMethod(email, password):
             return {'message':errMsg, 'desc':'Password is incorrect!'}
         else:
             return {'message':errMsg}
-
 
 def imageMethod(fileName): # UPLOAD
     cloudStorageFormat = f"images/{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}{os.path.splitext(fileName)[1].lower()}"
@@ -157,39 +157,78 @@ def auth_status():
             }
         ), 401
 
+async def process_upload(request, session):
+    productId = generatePrivateUniqueId('productId', 5)
+    uploadedFile = request.form['uploadedFile']
+    name = request.form['name']
+    desc = "" if not 'desc' in request.form else request.form['desc']
+
+    imagePath = imageMethod(uploadedFile)
+    imageUrl = storage.child(imagePath).get_url(session['userId'])
+    data = db.child('products').child(productId).set({
+        'imagePath': imagePath,
+        'imageUrl': imageUrl,
+        'name': name,
+        'productId': productId,
+        'ownedBy': session['userId'],
+        'desc': desc
+    })
+    # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
+    db.child('users').child(session['userId']).child('productsOwned').child(productId).set(productId)
+
+    return {
+        'status': {
+            'code': 200,
+            'message': "Product has been uploaded"
+        },
+        'data': data
+    }
+
 @app.route('/products', methods=['GET', 'POST'])
-def products():
-    lastId = db.child('products').child('lastId').get().val()
+async def products():
+    # lastId = db.child('products').child('lastId').get().val()
     if 'loggedIn' in session:
-        lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
+        # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
         if request.method == 'GET':
             productId = request.args.get('id')
             myProducts = list(map(lambda x: db.child('products').child(x).get().val(), db.child('users').child(session['userId']).child('productsOwned').get().val()))
-            x = [i if i['productId'] == int(productId) else None for i in myProducts]
             if productId is None:
                 return jsonify({
                     "myProducts": myProducts,
                 }), 200
             else:
                 return jsonify({
-                    "myProduct": list(filter(lambda x: x['productId'] == int(productId), myProducts))[0],
+                    "myProduct": list(filter(lambda x: x['productId'] == int(productId), myProducts)),
                 }), 200
+            
         elif request.method == 'POST':
-            uploadedFile = request.form['uploadedFile']
-            name = request.form['name']
-            desc = "" if not 'desc' in request.form else request.form['desc']
+            result = await asyncio.gather(process_upload(request, session))
 
-            imagePath = imageMethod(uploadedFile)
-            db.child('products').child(f'productId-{lastId+1}').set({
-                'imagePath':imagePath,
-                'name':name,
-                'productId': lastId+1,
-                'ownedBy':session['userId'],
-                'desc':desc
-            })
-            db.child('products').child('lastId').set(lastId+1)
-            db.child('users').child(session['userId']).child('productsOwned').child(lastIdByUser).set(f'productId-{lastId+1}')
-            return jsonify({"status":db.child('users').child(session['userId']).get().val()})
+            return jsonify(result[0]), 201
+            # uploadedFile = request.form['uploadedFile']
+            # name = request.form['name']
+            # desc = "" if not 'desc' in request.form else request.form['desc']
+
+            # imagePath = imageMethod(uploadedFile)
+            # imageUrl = storage.child(imagePath).get_url(session['userId'])
+            # data = db.child('products').child(f'productId-{lastId+1}').set({
+            #     'imagePath':imagePath,
+            #     'imageUrl':imageUrl,
+            #     'name':name,
+            #     'productId': lastId+1,
+            #     'ownedBy':session['userId'],
+            #     'desc':desc
+            # })
+            # db.child('products').child('lastId').set(lastId+1)
+            # db.child('users').child(session['userId']).child('productsOwned').child(lastIdByUser).set(f'productId-{lastId+1}')
+            
+            # return jsonify({
+            #     'status' : {
+            #         'code' : 200,
+            #         'message': "Product has been uploaded"
+            #     },
+            #     'data': data
+            # }), 201
             
     else:
         return redirect(url_for('auth_status'))
