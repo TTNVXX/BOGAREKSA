@@ -1,8 +1,9 @@
-import pyrebase, json, datetime, os, random
+import pyrebase, json, datetime, os, random, firebase_admin
 from time import sleep
 from requests.exceptions import HTTPError
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from dotenv import load_dotenv, dotenv_values
+from firebase_admin import credentials, db
 
 load_dotenv()
 
@@ -33,12 +34,20 @@ def registerMethod(email, password):
         user = auth.create_user_with_email_and_password(email, password)
         registerDetail = auth.get_account_info(user['idToken'])['users'][0]
         userData = {
-            'email': registerDetail['email'],
+            'localId': registerDetail['localId'],
+            'email': request.form['email'],
             'role': int(request.form['role']),
-            'username': request.form['username'],
+            'username': str(request.form['email']).split('@')[0] if not 'username' in request.form else request.form['username'],
             'registeredAt': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
-        return {'message':'CREATED', 'desc':'Successfully registered!', 'registerDetail': db.child('users').child(registerDetail['localId']).set(userData)}
+        userNameByEmail = True if not 'username' in request.form else False
+        result = {
+            'message':'CREATED', 
+            'desc':'Successfully registered!', 
+            'registerDetail': db.child('users').child(registerDetail['localId']).set(userData),
+            'userNameByEmail': userNameByEmail
+        }
+        return result
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'EMAIL_EXISTS':
@@ -159,19 +168,29 @@ def auth_status():
 #     for user in users.each():
 #         return jsonify(user.val())
 
-# @app.route('/products', methods=['GET', 'POST'])
-# def image():
-#     if request.method == 'GET':
-#         imageId = request.args.get('id')
-#         if imageId is None:
-#             return "Nothing to find", 404
-#         else:
-#             return f"Image ID: {imageId}", 200
-#     elif request.method == 'POST':
-#         fileName = "G:\Sticker\E4-Ox_VVUAYW6HT.jpg"
-#         imageId = imageMethod(fileName)['imageId']
-#         filePath = imageMethod(fileName)['filePath']
-#         return db.child('images').child(imageId).child("filePath").set(filePath)
+@app.route('/products', methods=['GET', 'POST'])
+def products():
+    lastId = db.child('products').child('lastId').get().val()
+    if 'loggedIn' in session:
+        if request.method == 'GET':
+            productId = request.args.get('id')
+            myProducts = list(map(lambda x: db.child('products').child(x).get().val(), db.child('users').child(session['userId']).child('products').get().val()))
+            x = [i if i['productId'] == int(productId) else None for i in myProducts]
+            if productId is None:
+                return jsonify({
+                    "myProducts": myProducts,
+                }), 200
+            else:
+                return jsonify({
+                    "myProduct": list(filter(lambda x: x['productId'] == int(productId), myProducts))[0]
+                }), 200
+        elif request.method == 'POST':
+            fileName = "G:\Sticker\E4-Ox_VVUAYW6HT.jpg"
+            imageId = imageMethod(fileName)['imageId']
+            filePath = imageMethod(fileName)['filePath']
+            return db.child('users').child().child("filePath").set(filePath)
+    else:
+        return redirect(url_for('auth_status'))
     
 if __name__ == '__main__':
     app.run(debug=True, host=os.getenv("HOST"), port=os.getenv("PORT"))

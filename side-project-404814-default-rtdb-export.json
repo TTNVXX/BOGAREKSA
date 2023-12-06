@@ -1,0 +1,48 @@
+{
+  "products": {
+    "productId-1": {
+      "imagePath": "images/test1.jpg",
+      "ownedBy": "STdZUZOxxbPG1dJ8bK6i6ywboez1",
+      "productId": 1
+    },
+    "productId-2": {
+      "imagePath": "images/test2.jpg",
+      "ownedBy": "STdZUZOxxbPG1dJ8bK6i6ywboez1",
+      "productId": 2
+    },
+    "productId-3": {
+      "imagePath": "images/test3.jpg",
+      "ownedBy": "phQ7BYsbVyd63ZKvptboBsm3bqa2",
+      "productId": 3
+    },
+    "productId-4": {
+      "imagePath": "images/test4.jpg",
+      "ownedBy": "phQ7BYsbVyd63ZKvptboBsm3bqa2",
+      "productId": 4
+    }
+  },
+  "users": {
+    "STdZUZOxxbPG1dJ8bK6i6ywboez1": {
+      "email": "radenrizqy@bogareksa.rdnet.id",
+      "localId": "STdZUZOxxbPG1dJ8bK6i6ywboez1",
+      "products": [
+        "productId-1",
+        "productId-2"
+      ],
+      "registeredAt": "2023-12-06 11:59:48",
+      "role": 2,
+      "username": "raden"
+    },
+    "phQ7BYsbVyd63ZKvptboBsm3bqa2": {
+      "email": "app-dev@bogareksa.rdnet.id",
+      "localId": "phQ7BYsbVyd63ZKvptboBsm3bqa2",
+      "products": [
+        "productId-3",
+        "productId-4"
+      ],
+      "registeredAt": "2023-12-06 12:28:37",
+      "role": 1,
+      "username": "app-dev"
+    }
+  }
+}
