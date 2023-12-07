@@ -25,10 +25,13 @@ auth = firebase.auth()
 storage = firebase.storage()
 db = firebase.database()
 
-def generatePrivateUniqueId(adder, length):
+def generatePrivateUniqueId(length, adder=''):
     characters = 'qwertyuiopasdfghjklzxcvbnm' + '1234567890'
     unique_id = ''.join(random.choices(characters, k=length))
-    return adder+"-"+unique_id.lower()
+    if len(adder) > 0:
+        return adder+"-"+unique_id
+    else:
+        return unique_id
 
 def registerMethod(email, password):
     try:
@@ -158,7 +161,7 @@ def auth_status():
         ), 401
 
 async def process_upload(request, session):
-    productId = generatePrivateUniqueId('productId', 5)
+    productId = generatePrivateUniqueId(length=5)
     uploadedFile = request.form['uploadedFile']
     name = request.form['name']
     price = request.form['price']
@@ -166,13 +169,13 @@ async def process_upload(request, session):
 
     imagePath = imageMethod(uploadedFile)
     imageUrl = storage.child(imagePath).get_url(session['userId'])
-    data = db.child('products').child(productId).set({
+    data = db.child('products').child(f"productId-{productId}").set({
         'imagePath': imagePath,
         'imageUrl': imageUrl,
         'name': name,
         'productId': productId,
         'ownedBy': session['userId'],
-        'price': price,
+        'price': int(price),
         'desc': desc
     })
     # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
@@ -193,14 +196,14 @@ async def products():
         # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
         if request.method == 'GET':
             productId = request.args.get('id')
-            myProducts = list(map(lambda x: db.child('products').child(x).get().val(), db.child('users').child(session['userId']).child('productsOwned').get().val()))
+            myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child(session['userId']).child('productsOwned').get().val()))
             if productId is None:
                 return jsonify({
                     "myProducts": myProducts,
                 }), 200
             else:
                 return jsonify({
-                    "myProduct": list(filter(lambda x: x['productId'] == int(productId), myProducts)),
+                    "myProduct": list(filter(lambda x: x['productId'] == productId, myProducts)),
                 }), 200
             
         elif request.method == 'POST':
