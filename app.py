@@ -161,6 +161,7 @@ async def process_upload(request, session):
     productId = generatePrivateUniqueId('productId', 5)
     uploadedFile = request.form['uploadedFile']
     name = request.form['name']
+    price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
 
     imagePath = imageMethod(uploadedFile)
@@ -171,6 +172,7 @@ async def process_upload(request, session):
         'name': name,
         'productId': productId,
         'ownedBy': session['userId'],
+        'price': price,
         'desc': desc
     })
     # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
