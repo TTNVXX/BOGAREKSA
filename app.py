@@ -10,6 +10,7 @@ from cryptography.fernet import Fernet
 import base64
 from flask_cors import CORS
 import asyncio
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -193,7 +194,7 @@ BLACKLIST = set()
 
 async def process_upload(request, userId):
     productId = generatePrivateUniqueId(length=5)
-    uploadedFile = request.form['uploadedFile']
+    uploadedFile = secure_filename(request.form['uploadedFile'])
     name = request.form['name']
     price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
