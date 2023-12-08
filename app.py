@@ -1,7 +1,9 @@
-import pyrebase, json, datetime, os, random, firebase_admin
+import pyrebase, json, datetime, os, random
 from time import sleep
 from requests.exceptions import HTTPError
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask_restful import Api, Resource
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
 from firebase_admin import credentials, db
 import asyncio
@@ -65,7 +67,8 @@ def loginMethod(email, password):
         loginDetail = auth.get_account_info(user['idToken'])
         session['loggedIn'] = True
         session['userId'] = loginDetail['users'][0]['localId']
-        return {'message':'OK', 'desc':'Successfully signed in!', 'loginDetail':loginDetail['users'][0]}
+        apiToken = create_access_token(identity=loginDetail['users'][0]['localId'])
+        return {'message':'OK', 'desc':'Successfully signed in!', 'loginDetail':loginDetail['users'][0], 'apiToken':apiToken}
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'INVALID_LOGIN_CREDENTIALS':
@@ -78,8 +81,15 @@ def imageMethod(fileName): # UPLOAD
     storage.child(cloudStorageFormat).put(fileName)
     return cloudStorageFormat
 
+# API ROUTES
+
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
+
+api = Api(app)
+app.config['JWT_SECRET_KEY'] = 'jawawibutoken'
+jwt = JWTManager(app)
+
 
 @app.route('/')
 def host():
@@ -190,9 +200,11 @@ async def process_upload(request, session):
     }
 
 @app.route('/products', methods=['GET', 'POST'])
+@jwt_required()
 async def products():
     # lastId = db.child('products').child('lastId').get().val()
-    if 'loggedIn' in session:
+    current_user = get_jwt_identity()
+    if current_user:
         # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
         if request.method == 'GET':
             productId = request.args.get('id')
