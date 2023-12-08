@@ -6,6 +6,7 @@ from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
 from firebase_admin import credentials, db
+from flask_cors import CORS
 import asyncio
 
 load_dotenv()
@@ -90,6 +91,7 @@ api = Api(app)
 app.config['JWT_SECRET_KEY'] = 'jawawibutoken'
 jwt = JWTManager(app)
 
+CORS(app)
 
 @app.route('/')
 def host():
