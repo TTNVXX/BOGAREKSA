@@ -194,7 +194,7 @@ BLACKLIST = set()
 
 async def process_upload(request, userId):
     productId = generatePrivateUniqueId(length=5)
-    uploadedFile = secure_filename(request.form['uploadedFile'])
+    uploadedFile = secure_filename(request.files['uploadedFile'].filename)
     name = request.form['name']
     price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
