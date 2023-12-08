@@ -1,7 +1,7 @@
 import pyrebase, json, datetime, os, random
 from time import sleep
 from requests.exceptions import HTTPError
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
@@ -66,10 +66,10 @@ def loginMethod(email, password):
     try:
         user = auth.sign_in_with_email_and_password(email, password)
         loginDetail = auth.get_account_info(user['idToken'])
-        session['loggedIn'] = True
-        session['userId'] = loginDetail['users'][0]['localId']
+        # session['userId'] = loginDetail['users'][0]['localId']
         apiToken = create_access_token(identity=loginDetail['users'][0]['localId'])
-        return {'message':'OK', 'desc':'Successfully signed in!', 'loginDetail':loginDetail['users'][0], 'apiToken':apiToken}
+        # return {'message':'OK', 'desc':'Successfully signed in!', 'loginDetail':loginDetail['users'][0], 'apiToken':apiToken, 'identity':get_jwt_identity()}
+        return {'identity':get_jwt_identity(), 'apiToken':apiToken}
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'INVALID_LOGIN_CREDENTIALS':
@@ -109,6 +109,7 @@ def home():
     return render_template('index.html', title="Bogareksa Home")
 
 @app.route('/login', methods=['GET', 'POST'])
+@jwt_required
 def login():
     if request.method in ['GET', 'POST']:
         if request.method == 'GET':
@@ -146,20 +147,20 @@ def register():
 
 @app.route('/logout')
 def logout():
-   session.pop('loggedIn', None)
-   session.pop('id', None)
+#    session.pop('loggedIn', None)
+#    session.pop('id', None)
    return redirect(url_for('login'))
 
 @app.route('/auth_status')
 def auth_status():
-    if 'loggedIn' in session:
+    if 'loggedIn':
         return jsonify(
             {
                 'status': {
                     'code': 200,
                     'message': 'Authenticated'
                 },
-                'userId': session['userId']
+                'userId': get_jwt_identity()
             }
         ), 200
     else:
@@ -206,52 +207,51 @@ async def process_upload(request, session):
 async def products():
     # lastId = db.child('products').child('lastId').get().val()
     current_user = get_jwt_identity()
-    if session['userId']:
-        if current_user:
-            # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
-            if request.method == 'GET':
-                productId = request.args.get('id')
-                myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child(session['userId']).child('productsOwned').get().val()))
-                if productId is None:
-                    return jsonify({
-                        "myProducts": myProducts,
-                    }), 200
-                else:
-                    return jsonify({
-                        "myProduct": list(filter(lambda x: x['productId'] == productId, myProducts)),
-                    }), 200
-                
-            elif request.method == 'POST':
-                result = await asyncio.gather(process_upload(request, session))
+    if current_user:
+        # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
+        if request.method == 'GET':
+            productId = request.args.get('id')
+            myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child('1').child('productsOwned').get().val()))
+            if productId is None:
+                return jsonify({
+                    "myProducts": myProducts,
+                }), 200
+            else:
+                return jsonify({
+                    "myProduct": list(filter(lambda x: x['productId'] == productId, myProducts)),
+                }), 200
+            
+        elif request.method == 'POST':
+            result = await asyncio.gather(process_upload(request, 1))
 
-                return jsonify(result[0]), 201
-                # uploadedFile = request.form['uploadedFile']
-                # name = request.form['name']
-                # desc = "" if not 'desc' in request.form else request.form['desc']
+            return jsonify(result[0]), 201
+            # uploadedFile = request.form['uploadedFile']
+            # name = request.form['name']
+            # desc = "" if not 'desc' in request.form else request.form['desc']
 
-                # imagePath = imageMethod(uploadedFile)
-                # imageUrl = storage.child(imagePath).get_url(session['userId'])
-                # data = db.child('products').child(f'productId-{lastId+1}').set({
-                #     'imagePath':imagePath,
-                #     'imageUrl':imageUrl,
-                #     'name':name,
-                #     'productId': lastId+1,
-                #     'ownedBy':session['userId'],
-                #     'desc':desc
-                # })
-                # db.child('products').child('lastId').set(lastId+1)
-                # db.child('users').child(session['userId']).child('productsOwned').child(lastIdByUser).set(f'productId-{lastId+1}')
-                
-                # return jsonify({
-                #     'status' : {
-                #         'code' : 200,
-                #         'message': "Product has been uploaded"
-                #     },
-                #     'data': data
-                # }), 201
-                
-        else:
-            return redirect(url_for('auth_status'))
+            # imagePath = imageMethod(uploadedFile)
+            # imageUrl = storage.child(imagePath).get_url(session['userId'])
+            # data = db.child('products').child(f'productId-{lastId+1}').set({
+            #     'imagePath':imagePath,
+            #     'imageUrl':imageUrl,
+            #     'name':name,
+            #     'productId': lastId+1,
+            #     'ownedBy':session['userId'],
+            #     'desc':desc
+            # })
+            # db.child('products').child('lastId').set(lastId+1)
+            # db.child('users').child(session['userId']).child('productsOwned').child(lastIdByUser).set(f'productId-{lastId+1}')
+            
+            # return jsonify({
+            #     'status' : {
+            #         'code' : 200,
+            #         'message': "Product has been uploaded"
+            #     },
+            #     'data': data
+            # }), 201
+            
+    else:
+        return redirect(url_for('auth_status'))
     
 if __name__ == '__main__':
     app.run(debug=True, host=os.getenv("HOST"), port=os.getenv("PORT"))
