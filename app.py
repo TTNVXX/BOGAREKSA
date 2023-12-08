@@ -6,6 +6,8 @@ from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
 from firebase_admin import credentials, db
+from cryptography.fernet import Fernet
+import base64
 from flask_cors import CORS
 import asyncio
 
@@ -48,28 +50,33 @@ def registerMethod(email, password):
             'registeredAt': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         userNameByEmail = True if not 'username' in request.form else False
-        result = {
-            'message':'CREATED', 
-            'desc':'Successfully registered!', 
+        return {
+            'message': 'CREATED', 
+            'desc': 'Successfully registered!', 
             'registerDetail': db.child('users').child(registerDetail['localId']).set(userData),
             'userNameByEmail': userNameByEmail
         }
-        return result
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'EMAIL_EXISTS':
             return {'message':errMsg, 'desc':'Email is already existed!'}
         else:
             return {'message':errMsg}
-        
+
 def loginMethod(email, password):
     try:
         user = auth.sign_in_with_email_and_password(email, password)
-        loginDetail = auth.get_account_info(user['idToken'])
-        # session['userId'] = loginDetail['users'][0]['localId']
-        apiToken = create_access_token(identity=loginDetail['users'][0]['localId'])
-        # return {'message':'OK', 'desc':'Successfully signed in!', 'loginDetail':loginDetail['users'][0], 'apiToken':apiToken, 'identity':get_jwt_identity()}
-        return {'identity':get_jwt_identity(), 'apiToken':apiToken}
+        loginDetail = auth.get_account_info(user['idToken'])['users'][0]
+        del loginDetail['providerUserInfo']
+        encrypted_id = cipher_suite.encrypt(loginDetail['localId'].encode())
+        encoded_id = base64.urlsafe_b64encode(encrypted_id).decode()
+        apiToken = create_access_token(identity=encoded_id)
+        return {
+            'message': 'OK', 
+            'desc': 'Successfully signed in!',
+            'apiToken':apiToken,
+            'loginDetail':loginDetail
+        }
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'INVALID_LOGIN_CREDENTIALS':
@@ -85,12 +92,11 @@ def imageMethod(fileName): # UPLOAD
 # API ROUTES
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = Fernet.generate_key()
+cipher_suite = Fernet(app.config['JWT_SECRET_KEY'])
 
 api = Api(app)
-app.config['JWT_SECRET_KEY'] = 'jawawibutoken'
 jwt = JWTManager(app)
-
 CORS(app)
 
 @app.route('/')
@@ -104,16 +110,20 @@ def host():
         }
     ), 200
 
-@app.route('/home')
-def home():
-    return render_template('index.html', title="Bogareksa Home")
+# @app.route('/home')
+# def home():
+#     return render_template('index.html', title="Bogareksa Home")
 
 @app.route('/login', methods=['GET', 'POST'])
-@jwt_required
 def login():
     if request.method in ['GET', 'POST']:
         if request.method == 'GET':
-            return render_template('login.html')
+            return jsonify({
+                'status': {
+                    'code': 200,
+                    'message': 'Login route is working'
+                }
+            }), 200
         elif request.method == 'POST':
             email = request.form['email']
             password = request.form['password']
@@ -123,8 +133,7 @@ def login():
             'status': {
                 'code': 400,
                 'message': 'Nah, your request aren\'t processed!'
-            },
-            'data': 1,
+            }
         }), 400
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -140,40 +149,49 @@ def register():
         return jsonify({
             'status': {
                 'code': 400,
-                'message': 'Nah, your request aren\'t processed!'
-            },
-            'data': 1,
+                'message': 'Bad Request'
+            }
         }), 400
 
-@app.route('/logout')
-def logout():
-#    session.pop('loggedIn', None)
-#    session.pop('id', None)
-   return redirect(url_for('login'))
+BLACKLIST = set()
 
-@app.route('/auth_status')
-def auth_status():
-    if 'loggedIn':
-        return jsonify(
-            {
-                'status': {
-                    'code': 200,
-                    'message': 'Authenticated'
-                },
-                'userId': get_jwt_identity()
-            }
-        ), 200
-    else:
-        return jsonify(
-            {
-                'status': {
-                    'code': 401,
-                    'message': 'Unauthenticated'
-                }
-            }
-        ), 401
+# Token blacklisting callback
+# @jwt.token_in_blocklist_loader
+# def check_if_token_in_blocklist(decrypted_token):
+#     jti = decrypted_token['jti']
+#     return jti in BLACKLIST
 
-async def process_upload(request, session):
+# # Route to logout and blacklist the token
+# @app.route('/logout', methods=['POST'])
+# @jwt_required()
+# def logout():
+#     jti = get_jwt_identity()
+#     BLACKLIST.add(jti)
+#     return jsonify({"msg": "Successfully logged out"})
+
+# @app.route('/auth_status')
+# def auth_status():
+#     if 'loggedIn':
+#         return jsonify(
+#             {
+#                 'status': {
+#                     'code': 200,
+#                     'message': 'Authenticated'
+#                 },
+#                 'apiToken': get_jwt_identity()
+#             }
+#         ), 200
+#     else:
+#         return jsonify(
+#             {
+#                 'status': {
+#                     'code': 401,
+#                     'message': 'Unauthenticated'
+#                 }
+#             }
+#         ), 401
+
+async def process_upload(request, userId):
     productId = generatePrivateUniqueId(length=5)
     uploadedFile = request.form['uploadedFile']
     name = request.form['name']
@@ -181,18 +199,17 @@ async def process_upload(request, session):
     desc = "" if not 'desc' in request.form else request.form['desc']
 
     imagePath = imageMethod(uploadedFile)
-    imageUrl = storage.child(imagePath).get_url(session['userId'])
+    imageUrl = storage.child(imagePath).get_url(userId)
     data = db.child('products').child(f"productId-{productId}").set({
         'imagePath': imagePath,
         'imageUrl': imageUrl,
         'name': name,
         'productId': productId,
-        'ownedBy': session['userId'],
+        'ownedBy': userId,
         'price': int(price),
         'desc': desc
     })
-    # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
-    db.child('users').child(session['userId']).child('productsOwned').child(productId).set(productId)
+    db.child('users').child(userId).child('productsOwned').child(productId).set(productId)
 
     return {
         'status': {
@@ -205,24 +222,25 @@ async def process_upload(request, session):
 @app.route('/products', methods=['GET', 'POST'])
 @jwt_required()
 async def products():
-    # lastId = db.child('products').child('lastId').get().val()
-    current_user = get_jwt_identity()
-    if current_user:
-        # lastIdByUser = 0 if db.child('users').child(session['userId']).child('productsOwned').get().val() == None else db.child('users').child(session['userId']).child('productsOwned').get().val().__len__()
+    encoded_id = get_jwt_identity()
+    decoded_id = base64.urlsafe_b64decode(encoded_id)
+    decrypted_id = (cipher_suite.decrypt(decoded_id).decode())
+    if decrypted_id:
         if request.method == 'GET':
             productId = request.args.get('id')
-            myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child('1').child('productsOwned').get().val()))
+            myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child(decrypted_id).child('productsOwned').get().val()))
+            myProduct = list(filter(lambda x: x['productId'] == productId, myProducts))[0] if productId is not None else []
             if productId is None:
                 return jsonify({
                     "myProducts": myProducts,
                 }), 200
             else:
                 return jsonify({
-                    "myProduct": list(filter(lambda x: x['productId'] == productId, myProducts)),
+                    "myProduct": myProduct,
                 }), 200
-            
+      
         elif request.method == 'POST':
-            result = await asyncio.gather(process_upload(request, 1))
+            result = await asyncio.gather(process_upload(request, decrypted_id))
 
             return jsonify(result[0]), 201
             # uploadedFile = request.form['uploadedFile']
