@@ -5,7 +5,8 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
-from firebase_admin import credentials, db
+import firebase_admin
+from firebase_admin import credentials, db, storage
 from cryptography.fernet import Fernet
 import base64
 from flask_cors import CORS
@@ -30,6 +31,9 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 auth = firebase.auth()
 storage = firebase.storage()
 db = firebase.database()
+
+cred = credentials.Certificate("key/priv_key.json")
+firebase_admin.initialize_app(cred, {'storageBucket': 'side-project-404814.appspot.com'})
 
 def generatePrivateUniqueId(length, adder=''):
     characters = 'qwertyuiopasdfghjklzxcvbnm' + '1234567890'
@@ -194,12 +198,16 @@ BLACKLIST = set()
 
 async def process_upload(request, userId):
     productId = generatePrivateUniqueId(length=5)
-    uploadedFile = secure_filename(request.files['uploadedFile'].filename)
+    uploadedFile = request.files['uploadedFile']
     name = request.form['name']
     price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
 
-    imagePath = imageMethod(uploadedFile)
+    uploadedFile = request.files['file']
+    imagePath = f"images/{secure_filename(uploadedFile.filename)}"
+    storage.child(imagePath).put(uploadedFile)
+
+    # Get the URL of the uploaded image
     imageUrl = storage.child(imagePath).get_url(userId)
     data = db.child('products').child(f"productId-{productId}").set({
         'imagePath': imagePath,
@@ -225,11 +233,11 @@ async def process_upload(request, userId):
 async def products():
     encoded_id = get_jwt_identity()
     decoded_id = base64.urlsafe_b64decode(encoded_id)
-    decrypted_id = (cipher_suite.decrypt(decoded_id).decode())
-    if decrypted_id:
+    userId = (cipher_suite.decrypt(decoded_id).decode())
+    if userId:
         if request.method == 'GET':
             productId = request.args.get('id')
-            myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child(decrypted_id).child('productsOwned').get().val()))
+            myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child(userId).child('productsOwned').get().val()))
             myProduct = list(filter(lambda x: x['productId'] == productId, myProducts))[0] if productId is not None else []
             if productId is None:
                 return jsonify({
@@ -241,7 +249,7 @@ async def products():
                 }), 200
       
         elif request.method == 'POST':
-            result = await asyncio.gather(process_upload(request, decrypted_id))
+            result = await asyncio.gather(process_upload(request, userId))
 
             return jsonify(result[0]), 201            
     else:
@@ -253,13 +261,17 @@ def upload_image():
     if request.method == "POST":
         if request.files:
             productId = generatePrivateUniqueId(length=5)
-            uploadedFile = secure_filename(request.files['uploadedFile'].filename)
+            uploadedFile = request.files['uploadedFile']
             name = request.form['name']
             price = request.form['price']
             desc = "" if not 'desc' in request.form else request.form['desc']
 
-            imagePath = imageMethod(uploadedFile)
-            imageUrl = storage.child(imagePath).get_url(userId)
+            imagePath = f"images/{secure_filename(uploadedFile.filename)}"
+            image_blob = storage.bucket().blob(imagePath)
+            image_blob.upload_from_file(uploadedFile)
+
+            # Get the URL of the uploaded image
+            imageUrl = image_blob.public_url
             db.child('products').child(f"productId-{productId}").set({
                 'imagePath': imagePath,
                 'imageUrl': imageUrl,
@@ -270,14 +282,6 @@ def upload_image():
                 'desc': desc
             })
             db.child('users').child(userId).child('productsOwned').child(productId).set(productId)
-
-            # return {
-            #     'status': {
-            #         'code': 200,
-            #         'message': "Product has been uploaded"
-            #     },
-            #     'data': data
-            # }
             return redirect(request.url)
     return render_template("upload_image.html")
     
