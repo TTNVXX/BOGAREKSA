@@ -203,7 +203,12 @@ async def process_upload(request, userId):
     price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
 
-    imagePath = f"images/{secure_filename(uploadedFile.filename)}"
+    current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    file_extension = uploadedFile.filename.split('.')[-1]
+    new_filename = f"{current_datetime}.{file_extension}"
+
+    # Upload image to Firebase Storage with the new filename
+    imagePath = f"images/{secure_filename(new_filename)}"
     storage.child(imagePath).put(uploadedFile)
 
     # Get the URL of the uploaded image
