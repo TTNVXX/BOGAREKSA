@@ -252,9 +252,9 @@ async def products():
                     return jsonify({
                         "myProduct": myProduct,
                     }), 200
-            except TypeError as e:
+            except Exception as e:
                 return jsonify({
-                    'msg':'You have no product'
+                    'errMsg': e
                 })
       
         elif request.method == 'POST':
