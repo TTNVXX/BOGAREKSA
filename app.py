@@ -203,7 +203,6 @@ async def process_upload(request, userId):
     price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
 
-    uploadedFile = request.files['file']
     imagePath = f"images/{secure_filename(uploadedFile.filename)}"
     storage.child(imagePath).put(uploadedFile)
 
