@@ -232,7 +232,7 @@ async def process_upload(request, userId):
         'data': data
     }
 
-@app.route('/products', methods=['GET', 'POST'])
+@app.route('/products', methods=['GET', 'POST', 'DELETE'])
 @jwt_required()
 async def products():
     encoded_id = get_jwt_identity()
@@ -241,21 +241,31 @@ async def products():
     if userId:
         if request.method == 'GET':
             productId = request.args.get('id')
-            myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child(userId).child('productsOwned').get().val()))
-            myProduct = list(filter(lambda x: x['productId'] == productId, myProducts))[0] if productId is not None else []
-            if productId is None:
+            try:
+                myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child(userId).child('productsOwned').get().val()))
+                myProduct = list(filter(lambda x: x['productId'] == productId, myProducts))[0] if productId is not None else []
+                if productId is None:
+                    return jsonify({
+                        "myProducts": myProducts,
+                    }), 200
+                else:
+                    return jsonify({
+                        "myProduct": myProduct,
+                    }), 200
+            except TypeError as e:
                 return jsonify({
-                    "myProducts": myProducts,
-                }), 200
-            else:
-                return jsonify({
-                    "myProduct": myProduct,
-                }), 200
+                    'msg':'You have no product'
+                })
       
         elif request.method == 'POST':
             result = await asyncio.gather(process_upload(request, userId))
-
-            return jsonify(result[0]), 201            
+            return jsonify(result[0]), 201
+        elif request.method == 'DELETE':
+            productId = request.args.get('id')
+            if productId is None:
+                return {'message':'Nothing to delete'}
+            else:
+                return {'message':'What\'s been deleted'}         
     else:
         return redirect(url_for('auth_status'))
 
