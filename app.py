@@ -194,7 +194,7 @@ BLACKLIST = set()
 
 async def process_upload(request, userId):
     productId = generatePrivateUniqueId(length=5)
-    uploadedFile = request.files['uploadedFile']
+    uploadedFile = secure_filename(request.files['uploadedFile'].filename)
     name = request.form['name']
     price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
@@ -243,34 +243,43 @@ async def products():
         elif request.method == 'POST':
             result = await asyncio.gather(process_upload(request, decrypted_id))
 
-            return jsonify(result[0]), 201
-            # uploadedFile = request.form['uploadedFile']
-            # name = request.form['name']
-            # desc = "" if not 'desc' in request.form else request.form['desc']
+            return jsonify(result[0]), 201            
+    else:
+        return redirect(url_for('auth_status'))
 
-            # imagePath = imageMethod(uploadedFile)
-            # imageUrl = storage.child(imagePath).get_url(session['userId'])
-            # data = db.child('products').child(f'productId-{lastId+1}').set({
-            #     'imagePath':imagePath,
-            #     'imageUrl':imageUrl,
-            #     'name':name,
-            #     'productId': lastId+1,
-            #     'ownedBy':session['userId'],
-            #     'desc':desc
-            # })
-            # db.child('products').child('lastId').set(lastId+1)
-            # db.child('users').child(session['userId']).child('productsOwned').child(lastIdByUser).set(f'productId-{lastId+1}')
-            
-            # return jsonify({
-            #     'status' : {
-            #         'code' : 200,
+@app.route("/upload-image", methods=["GET", "POST"])
+def upload_image():
+    userId = "STdZUZOxxbPG1dJ8bK6i6ywboez1"
+    if request.method == "POST":
+        if request.files:
+            productId = generatePrivateUniqueId(length=5)
+            uploadedFile = secure_filename(request.files['uploadedFile'].filename)
+            name = request.form['name']
+            price = request.form['price']
+            desc = "" if not 'desc' in request.form else request.form['desc']
+
+            imagePath = imageMethod(uploadedFile)
+            imageUrl = storage.child(imagePath).get_url(userId)
+            db.child('products').child(f"productId-{productId}").set({
+                'imagePath': imagePath,
+                'imageUrl': imageUrl,
+                'name': name,
+                'productId': productId,
+                'ownedBy': userId,
+                'price': int(price),
+                'desc': desc
+            })
+            db.child('users').child(userId).child('productsOwned').child(productId).set(productId)
+
+            # return {
+            #     'status': {
+            #         'code': 200,
             #         'message': "Product has been uploaded"
             #     },
             #     'data': data
-            # }), 201
-            
-    else:
-        return redirect(url_for('auth_status'))
+            # }
+            return redirect(request.url)
+    return render_template("upload_image.html")
     
 if __name__ == '__main__':
     app.run(debug=True, host=os.getenv("HOST"), port=os.getenv("PORT"))
