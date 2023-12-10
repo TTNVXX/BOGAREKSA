@@ -290,17 +290,23 @@ async def products():
             return result[0], 201
         elif request.method == 'DELETE':
             productId = request.args.get('id')
-            if productId is None:
+            deleteAll = request.args.get('all')
+            if productId is None and deleteAll is None:
                 return {
                     'msg':'Nothing to delete'
                 }, 200
-            elif request.args.get('all') == 'true':
+            elif deleteAll == 'true':
+                allMyProducts = list(map(lambda x: db.child('users').child(userId).child('products').child(x).child('imagePath').get().val(), list(db.child('users').child(userId).child('products').get().val())))
+                for i in allMyProducts:
+                    storage.delete(i, userId)
+                db.child('users').child(userId).child('products').remove()
                 return {
                     'msg': 'All products have been requested to delete'
                 }, 200
             else:
                 getFilePath = db.child('users').child(userId).child('products').child(productId).child('imagePath').get().val()
                 storage.delete(getFilePath, userId)
+                db.child('users').child(userId).child('products').child(productId).remove()
                 return {
                     'filePath': getFilePath,
                     'msg':'Product has been deleted'
