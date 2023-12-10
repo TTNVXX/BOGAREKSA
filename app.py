@@ -99,11 +99,6 @@ def loginMethod(email, password):
                 'msg':errMsg
             }, 400
 
-# def imageMethod(fileName): # UPLOAD
-#     cloudStorageFormat = f"images/{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}{os.path.splitext(fileName)[1].lower()}"
-#     storage.child(cloudStorageFormat).put(fileName)
-#     return cloudStorageFormat
-
 # API ROUTES
 
 app = Flask(__name__)
@@ -130,7 +125,7 @@ def favicon():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method in ['GET', 'POST']:
+    try:
         if request.method == 'GET':
             return {
                 'status': {
@@ -142,17 +137,18 @@ def login():
             email = request.form['email']
             password = request.form['password']
             return loginMethod(email, password)
-    else:
+    except Exception as e:
         return {
             'status': {
                 'code': 400,
-                'msg': 'Nah, your request aren\'t processed!'
+                'msg': 'Bad Request',
+                'errMsg': str(e)
             }
         }, 400
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method in ['GET', 'POST']:
+    try:
         if request.method == 'GET':
             return {
                 'status': {
@@ -164,51 +160,14 @@ def register():
             email = request.form['email']
             password = request.form['password']
             return registerMethod(email, password)
-    else:
-        return {
-            'status': {
-                'code': 400,
-                'msg': 'Bad Request'
-            }
-        }, 400
-
-BLACKLIST = set()
-
-# Token blacklisting callback
-# @jwt.token_in_blocklist_loader
-# def check_if_token_in_blocklist(decrypted_token):
-#     jti = decrypted_token['jti']
-#     return jti in BLACKLIST
-
-# # Route to logout and blacklist the token
-# @app.route('/logout', methods=['POST'])
-# @jwt_required()
-# def logout():
-#     jti = get_jwt_identity()
-#     BLACKLIST.add(jti)
-#     return jsonify({"msg": "Successfully logged out"})
-
-# @app.route('/auth_status')
-# def auth_status():
-#     if 'loggedIn':
-#         return jsonify(
-#             {
-#                 'status': {
-#                     'code': 200,
-#                     'message': 'Authenticated'
-#                 },
-#                 'apiToken': get_jwt_identity()
-#             }
-#         ), 200
-#     else:
-#         return jsonify(
-#             {
-#                 'status': {
-#                     'code': 401,
-#                     'message': 'Unauthenticated'
-#                 }
-#             }
-#         ), 401
+    except Exception as e:
+            return {
+                'status': {
+                    'code': 400,
+                    'msg': 'Bad Request',
+                    'errMsg': str(e)
+                }
+            }, 400
 
 async def process_upload(request, userId):
     productId = generatePrivateUniqueId(length=5)
@@ -301,7 +260,36 @@ async def products():
                     'msg':'Product has been deleted'
                 }, 200
     else:
-        return redirect(url_for('/'))
+        return {
+            'status': 401,
+            'msg': 'Unauthorized'
+        }, 401
+
+@app.route('/reset-password', methods=['GET', 'POST']) # Need Token Auth...
+def resetPassword():
+    try:
+        if request.method == 'GET':
+            return {
+                'status': {
+                    'code': 200,
+                    'msg': 'Unconfigured'
+                }
+            }, 200
+        elif request.method == 'POST':
+            return {
+                'status': {
+                    'code': 200,
+                    'msg': 'Unconfigured'
+                }
+            }, 200
+    except Exception as e:
+        return {
+            'status': {
+                'code': 400,
+                'msg': 'Bad Request',
+                'errMsg': e
+            }
+        }, 400
 
 # @app.route("/upload-image", methods=["GET", "POST"])
 # def upload_image():
