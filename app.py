@@ -220,22 +220,11 @@ async def process_upload(request, userId):
     current_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     file_extension = uploadedFile.filename.split('.')[-1]
     new_filename = f"{current_datetime}.{file_extension}"
-
-    # Upload image to Firebase Storage with the new filename
     imagePath = f"images/{secure_filename(new_filename)}"
-    storage.child(imagePath).put(uploadedFile)
 
-    # Get the URL of the uploaded image
+    storage.child(imagePath).put(uploadedFile)
+    
     imageUrl = storage.child(imagePath).get_url(userId)
-    # data = db.child('products').child(f"{productId}").set({
-    #     'imagePath': imagePath,
-    #     'imageUrl': imageUrl,
-    #     'name': name,
-    #     'productId': productId,
-    #     'ownedBy': userId,
-    #     'price': int(price),
-    #     'desc': desc
-    # })
     data = {
         'imagePath': imagePath,
         'imageUrl': imageUrl,
