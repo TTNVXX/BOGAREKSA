@@ -1,8 +1,7 @@
 import pyrebase, json, datetime, os, random
-from time import sleep
 from requests.exceptions import HTTPError
-from flask import Flask, render_template, send_from_directory, request, jsonify, redirect, url_for
-from flask_restful import Api, Resource
+from flask import Flask, send_from_directory, request
+from flask_restful import Api
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
 import firebase_admin
@@ -12,6 +11,8 @@ import base64
 from flask_cors import CORS
 import asyncio
 from werkzeug.utils import secure_filename
+# from tensorflow.keras.models import load_model
+
 
 load_dotenv()
 
@@ -34,6 +35,8 @@ db = firebase.database()
 
 cred = credentials.Certificate("key/priv_key.json")
 firebase_admin.initialize_app(cred, {'storageBucket': 'side-project-404814.appspot.com'})
+
+model = load_model()
 
 def generatePrivateUniqueId(length, adder=''):
     characters = 'qwertyuiopasdfghjklzxcvbnm' + '1234567890'
@@ -176,9 +179,7 @@ async def process_upload(request, userId):
     price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
 
-    current_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_extension = uploadedFile.filename.split('.')[-1]
-    new_filename = f"{current_datetime}.{file_extension}"
+    new_filename = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.{uploadedFile.filename.split('.')[-1]}"
     imagePath = f"images/{secure_filename(new_filename)}"
 
     storage.child(imagePath).put(uploadedFile)
