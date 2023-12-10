@@ -1,7 +1,7 @@
 import pyrebase, json, datetime, os, random
 from time import sleep
 from requests.exceptions import HTTPError
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, send_from_directory, request, jsonify, redirect, url_for
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
@@ -50,13 +50,13 @@ def registerMethod(email, password):
         userData = {
             'localId': registerDetail['localId'],
             'email': request.form['email'],
-            'role': int(request.form['role']),
+            'role': 1,
             'username': str(request.form['email']).split('@')[0] if not 'username' in request.form else request.form['username'],
             'registeredAt': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         userNameByEmail = True if not 'username' in request.form else False
         return {
-            'message': 'CREATED', 
+            'msg': 'CREATED', 
             'desc': 'Successfully registered!', 
             'registerDetail': db.child('users').child(registerDetail['localId']).set(userData),
             'userNameByEmail': userNameByEmail
@@ -64,9 +64,14 @@ def registerMethod(email, password):
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'EMAIL_EXISTS':
-            return {'message':errMsg, 'desc':'Email is already existed!'}
+            return {
+                'msg':errMsg, 
+                'desc':'Email is already existed!'
+            }
         else:
-            return {'message':errMsg}
+            return {
+                'msg':errMsg
+            }
 
 def loginMethod(email, password):
     try:
@@ -77,7 +82,7 @@ def loginMethod(email, password):
         encoded_id = base64.urlsafe_b64encode(encrypted_id).decode()
         apiToken = create_access_token(identity=encoded_id)
         return {
-            'message': 'OK', 
+            'msg': 'OK', 
             'desc': 'Successfully signed in!',
             'apiToken':apiToken,
             'loginDetail':loginDetail
@@ -85,14 +90,19 @@ def loginMethod(email, password):
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'INVALID_LOGIN_CREDENTIALS':
-            return {'message':errMsg, 'desc':'Password is incorrect!'}
+            return {
+                'msg':errMsg, 
+                'desc':'Password is incorrect!'
+            }
         else:
-            return {'message':errMsg}
+            return {
+                'msg':errMsg
+            }
 
-def imageMethod(fileName): # UPLOAD
-    cloudStorageFormat = f"images/{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}{os.path.splitext(fileName)[1].lower()}"
-    storage.child(cloudStorageFormat).put(fileName)
-    return cloudStorageFormat
+# def imageMethod(fileName): # UPLOAD
+#     cloudStorageFormat = f"images/{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}{os.path.splitext(fileName)[1].lower()}"
+#     storage.child(cloudStorageFormat).put(fileName)
+#     return cloudStorageFormat
 
 # API ROUTES
 
@@ -106,57 +116,61 @@ CORS(app)
 
 @app.route('/')
 def host():
-    return jsonify(
-        {
+    return {
             'status': {
                 'code': 200,
-                'message': 'Flask REST API is working!'
+                'msg': 'Flask REST API is working!'
             }
-        }
-    ), 200
+        }, 200
 
-# @app.route('/home')
-# def home():
-#     return render_template('index.html', title="Bogareksa Home")
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    # return 'Test'
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method in ['GET', 'POST']:
         if request.method == 'GET':
-            return jsonify({
+            return {
                 'status': {
                     'code': 200,
-                    'message': 'Login route is working'
+                    'msg': 'Login route is working'
                 }
-            }), 200
+            }, 200
         elif request.method == 'POST':
             email = request.form['email']
             password = request.form['password']
             return loginMethod(email, password), 200
     else:
-        return jsonify({
+        return {
             'status': {
                 'code': 400,
-                'message': 'Nah, your request aren\'t processed!'
+                'msg': 'Nah, your request aren\'t processed!'
             }
-        }), 400
+        }, 400
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method in ['GET', 'POST']:
         if request.method == 'GET':
-            return render_template('register.html')
+            return {
+                'status': {
+                    'code': 200,
+                    'msg': 'Register route is working'
+                }
+            }, 200
         elif request.method == 'POST':
             email = request.form['email']
             password = request.form['password']
             return registerMethod(email, password), 201
     else:
-        return jsonify({
+        return {
             'status': {
                 'code': 400,
-                'message': 'Bad Request'
+                'msg': 'Bad Request'
             }
-        }), 400
+        }, 400
 
 BLACKLIST = set()
 
@@ -213,7 +227,16 @@ async def process_upload(request, userId):
 
     # Get the URL of the uploaded image
     imageUrl = storage.child(imagePath).get_url(userId)
-    data = db.child('products').child(f"productId-{productId}").set({
+    # data = db.child('products').child(f"{productId}").set({
+    #     'imagePath': imagePath,
+    #     'imageUrl': imageUrl,
+    #     'name': name,
+    #     'productId': productId,
+    #     'ownedBy': userId,
+    #     'price': int(price),
+    #     'desc': desc
+    # })
+    data = {
         'imagePath': imagePath,
         'imageUrl': imageUrl,
         'name': name,
@@ -221,13 +244,13 @@ async def process_upload(request, userId):
         'ownedBy': userId,
         'price': int(price),
         'desc': desc
-    })
-    db.child('users').child(userId).child('productsOwned').child(productId).set(productId)
+    }
+    db.child('users').child(userId).child('products').child(productId).set(data)
 
     return {
         'status': {
             'code': 200,
-            'message': "Product has been uploaded"
+            'msg': "Product has been uploaded"
         },
         'data': data
     }
@@ -242,62 +265,78 @@ async def products():
         if request.method == 'GET':
             productId = request.args.get('id')
             try:
-                myProducts = list(map(lambda x: db.child('products').child(f"productId-{x}").get().val(), db.child('users').child(userId).child('productsOwned').get().val()))
-                myProduct = list(filter(lambda x: x['productId'] == productId, myProducts))[0] if productId is not None else []
+                myProducts = list(map(lambda x: db.child('users').child(userId).child('products').child(x).get().val(), list(db.child('users').child(userId).child('products').get().val())))
+                myProduct = db.child('users').child(userId).child('products').child(productId).get().val()
                 if productId is None:
-                    return jsonify({
-                        "myProducts": myProducts,
-                    }), 200
+                    return {
+                        'myProducts': myProducts,
+                    }, 200
                 else:
-                    return jsonify({
-                        "myProduct": myProduct,
-                    }), 200
+                    return {
+                        'myProduct': myProduct,
+                    }, 200
             except Exception as e:
-                return jsonify({
-                    'errMsg': e
-                })
+                if '\'NoneType\' object is not iterable' == str(e):
+                    return {
+                        'myProducts':None
+                    }, 200
+                else:
+                    return {
+                        'errMsg': str(e)
+                    }, 400
       
         elif request.method == 'POST':
             result = await asyncio.gather(process_upload(request, userId))
-            return jsonify(result[0]), 201
+            return result[0], 201
         elif request.method == 'DELETE':
             productId = request.args.get('id')
             if productId is None:
-                return {'message':'Nothing to delete'}
+                return {
+                    'msg':'Nothing to delete'
+                }, 200
+            elif request.args.get('all') == 'true':
+                return {
+                    'msg': 'All products have been requested to delete'
+                }, 200
             else:
-                return {'message':'What\'s been deleted'}         
+                getFilePath = db.child('users').child(userId).child('products').child(productId).child('imagePath').get().val()
+                storage.delete(getFilePath, userId)
+                return {
+                    'filePath': getFilePath,
+                    'msg':'Product has been deleted'
+                }, 200
     else:
-        return redirect(url_for('auth_status'))
+        return redirect(url_for('/'))
 
-@app.route("/upload-image", methods=["GET", "POST"])
-def upload_image():
-    userId = "STdZUZOxxbPG1dJ8bK6i6ywboez1"
-    if request.method == "POST":
-        if request.files:
-            productId = generatePrivateUniqueId(length=5)
-            uploadedFile = request.files['uploadedFile']
-            name = request.form['name']
-            price = request.form['price']
-            desc = "" if not 'desc' in request.form else request.form['desc']
+# @app.route("/upload-image", methods=["GET", "POST"])
+# def upload_image():
+#     userId = "STdZUZOxxbPG1dJ8bK6i6ywboez1"
+#     if request.method == "POST":
+#         if request.files:
+#             productId = generatePrivateUniqueId(length=5)
+#             uploadedFile = request.files['uploadedFile']
+#             name = request.form['name']
+#             price = request.form['price']
+#             desc = "" if not 'desc' in request.form else request.form['desc']
 
-            imagePath = f"images/{secure_filename(uploadedFile.filename)}"
-            image_blob = storage.bucket().blob(imagePath)
-            image_blob.upload_from_file(uploadedFile)
+#             imagePath = f"images/{secure_filename(uploadedFile.filename)}"
+#             image_blob = storage.bucket().blob(imagePath)
+#             image_blob.upload_from_file(uploadedFile)
 
-            # Get the URL of the uploaded image
-            imageUrl = image_blob.public_url
-            db.child('products').child(f"productId-{productId}").set({
-                'imagePath': imagePath,
-                'imageUrl': imageUrl,
-                'name': name,
-                'productId': productId,
-                'ownedBy': userId,
-                'price': int(price),
-                'desc': desc
-            })
-            db.child('users').child(userId).child('productsOwned').child(productId).set(productId)
-            return redirect(request.url)
-    return render_template("upload_image.html")
+#             # Get the URL of the uploaded image
+#             imageUrl = image_blob.public_url
+#             db.child('products').child(f"productId-{productId}").set({
+#                 'imagePath': imagePath,
+#                 'imageUrl': imageUrl,
+#                 'name': name,
+#                 'productId': productId,
+#                 'ownedBy': userId,
+#                 'price': int(price),
+#                 'desc': desc
+#             })
+#             db.child('users').child(userId).child('productsOwned').child(productId).set(productId)
+#             return redirect(request.url)
+#     return render_template("upload_image.html")
     
 if __name__ == '__main__':
     app.run(debug=True, host=os.getenv("HOST"), port=os.getenv("PORT"))
