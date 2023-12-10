@@ -60,18 +60,18 @@ def registerMethod(email, password):
             'desc': 'Successfully registered!', 
             'registerDetail': db.child('users').child(registerDetail['localId']).set(userData),
             'userNameByEmail': userNameByEmail
-        }
+        }, 201
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'EMAIL_EXISTS':
             return {
                 'msg':errMsg, 
                 'desc':'Email is already existed!'
-            }
+            }, 400
         else:
             return {
                 'msg':errMsg
-            }
+            }, 400
 
 def loginMethod(email, password):
     try:
@@ -86,18 +86,18 @@ def loginMethod(email, password):
             'desc': 'Successfully signed in!',
             'apiToken':apiToken,
             'loginDetail':loginDetail
-        }
+        }, 200
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
         if errMsg == 'INVALID_LOGIN_CREDENTIALS':
             return {
                 'msg':errMsg, 
                 'desc':'Password is incorrect!'
-            }
+            }, 400
         else:
             return {
                 'msg':errMsg
-            }
+            }, 400
 
 # def imageMethod(fileName): # UPLOAD
 #     cloudStorageFormat = f"images/{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}{os.path.splitext(fileName)[1].lower()}"
@@ -141,7 +141,7 @@ def login():
         elif request.method == 'POST':
             email = request.form['email']
             password = request.form['password']
-            return loginMethod(email, password), 200
+            return loginMethod(email, password)
     else:
         return {
             'status': {
@@ -163,7 +163,7 @@ def register():
         elif request.method == 'POST':
             email = request.form['email']
             password = request.form['password']
-            return registerMethod(email, password), 201
+            return registerMethod(email, password)
     else:
         return {
             'status': {
@@ -242,7 +242,7 @@ async def process_upload(request, userId):
             'msg': "Product has been uploaded"
         },
         'data': data
-    }
+    }, 200
 
 @app.route('/products', methods=['GET', 'POST', 'DELETE'])
 @jwt_required()
