@@ -292,13 +292,7 @@ def resetPassword():
             }
         }, 400
 
-@app.route('/key')
-@jwt_required()
-def key():
-    if get_jwt_identity():
-        return "ND2JX-GVD6K-F4X4B-C48BJ-Q69TT"
-    else:
-        return "Please insert token"
+
 #@app.route('/reque')
 # @app.route("/upload-image", methods=["GET", "POST"])
 # def upload_image():
