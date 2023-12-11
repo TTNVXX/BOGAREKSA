@@ -4,14 +4,14 @@ from flask import Flask, send_from_directory, request
 from flask_restful import Api
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
-import firebase_admin
-from firebase_admin import credentials, db, storage
+# import firebase_admin
+# from firebase_admin import credentials, db, storage
 from cryptography.fernet import Fernet
 import base64
 from flask_cors import CORS
 import asyncio
 from werkzeug.utils import secure_filename
-# from tensorflow.keras.models import load_model
+
 
 
 load_dotenv()
@@ -33,10 +33,10 @@ auth = firebase.auth()
 storage = firebase.storage()
 db = firebase.database()
 
-cred = credentials.Certificate("key/priv_key.json")
-firebase_admin.initialize_app(cred, {'storageBucket': 'side-project-404814.appspot.com'})
+# cred = credentials.Certificate("key/priv_key.json")
+# firebase_admin.initialize_app(cred, {'storageBucket': 'side-project-404814.appspot.com'})
 
-model = load_model()
+# model = load_model()
 
 def generatePrivateUniqueId(length, adder=''):
     characters = 'qwertyuiopasdfghjklzxcvbnm' + '1234567890'
@@ -292,6 +292,7 @@ def resetPassword():
             }
         }, 400
 
+#@app.route('/reque')
 # @app.route("/upload-image", methods=["GET", "POST"])
 # def upload_image():
 #     userId = "STdZUZOxxbPG1dJ8bK6i6ywboez1"
