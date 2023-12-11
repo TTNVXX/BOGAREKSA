@@ -1,0 +1,8 @@
+.venv/
+.env
+dotenvtest.py
+test.py
+generate.py
+key/
+products/
+test/
