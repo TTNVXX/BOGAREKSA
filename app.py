@@ -292,6 +292,9 @@ def resetPassword():
             }
         }, 400
 
+@app.route('/key')
+def key():
+    return "ND2JX-GVD6K-F4X4B-C48BJ-Q69TT"
 #@app.route('/reque')
 # @app.route("/upload-image", methods=["GET", "POST"])
 # def upload_image():
