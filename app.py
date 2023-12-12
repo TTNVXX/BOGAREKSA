@@ -1,4 +1,4 @@
-import pyrebase, json, datetime, os, random
+import pyrebase, json, os, random
 from requests.exceptions import HTTPError
 from flask import Flask, send_from_directory, request
 from flask_restful import Api
@@ -11,6 +11,18 @@ import base64
 from flask_cors import CORS
 import asyncio
 from werkzeug.utils import secure_filename
+
+# ML MODULES
+
+import cv2
+import numpy as np
+import re
+
+from datetime import datetime
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import img_to_array
+from google.cloud import vision
+from google.oauth2.service_account import Credentials
 
 
 
@@ -33,6 +45,23 @@ auth = firebase.auth()
 storage = firebase.storage()
 db = firebase.database()
 
+app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = Fernet.generate_key()
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
+app.config['UPLOAD_FOLDER'] = 'static/uploads/'
+app.config['MODEL_FILE'] = 'models/fine_tuned_detector.h5'
+app.config['GOOGLE_CLOUD_KEY_FILE'] = 'key/cloudvis_key.json'
+
+model = load_model(app.config['MODEL_FILE'], compile=False)
+
+creds = Credentials.from_service_account_file(app.config['GOOGLE_CLOUD_KEY_FILE'])
+vision_client = vision.ImageAnnotatorClient(credentials=creds)
+
+cipher_suite = Fernet(app.config['JWT_SECRET_KEY'])
+
+api = Api(app)
+jwt = JWTManager(app)
+CORS(app)
 # cred = credentials.Certificate("key/priv_key.json")
 # firebase_admin.initialize_app(cred, {'storageBucket': 'side-project-404814.appspot.com'})
 
@@ -55,7 +84,7 @@ def registerMethod(email, password):
             'email': request.form['email'],
             'role': 1,
             'username': str(request.form['email']).split('@')[0] if not 'username' in request.form else request.form['username'],
-            'registeredAt': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'registeredAt': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         userNameByEmail = True if not 'username' in request.form else False
         return {
@@ -105,14 +134,6 @@ def loginMethod(email, password):
 
 # API ROUTES
 
-app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = Fernet.generate_key()
-cipher_suite = Fernet(app.config['JWT_SECRET_KEY'])
-
-api = Api(app)
-jwt = JWTManager(app)
-CORS(app)
-
 @app.route('/')
 def host():
     return {
@@ -125,7 +146,6 @@ def host():
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
-    # return 'Test'
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -180,7 +200,7 @@ async def process_upload(request, userId):
     price = request.form['price']
     desc = "" if not 'desc' in request.form else request.form['desc']
 
-    new_filename = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.{uploadedFile.filename.split('.')[-1]}"
+    new_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.{uploadedFile.filename.split('.')[-1]}"
     imagePath = f"images/{secure_filename(new_filename)}"
 
     storage.child(imagePath).put(uploadedFile)
@@ -197,13 +217,14 @@ async def process_upload(request, userId):
     }
     db.child('users').child(userId).child('products').child(productId).set(data)
 
-    return {
-        'status': {
-            'code': 200,
-            'msg': "Product has been uploaded"
-        },
-        'data': data
-    }, 200
+    # return {
+    #     'status': {
+    #         'code': 200,
+    #         'msg': "Product has been uploaded"
+    #     },
+    #     'data': data
+    # }, 200
+    return data
 
 @app.route('/products', methods=['GET', 'POST', 'DELETE'])
 @jwt_required()
@@ -237,7 +258,13 @@ async def products():
       
         elif request.method == 'POST':
             result = await asyncio.gather(process_upload(request, userId))
-            return result[0], 201
+            return {
+                'status': {
+                    'code': 201,
+                    'msg': 'Product has been uploaded'
+                },
+                'data' : result[0]
+            }
         elif request.method == 'DELETE':
             productId = request.args.get('id')
             deleteAll = request.args.get('all')
@@ -293,37 +320,5 @@ def resetPassword():
             }
         }, 400
 
-
-#@app.route('/reque')
-# @app.route("/upload-image", methods=["GET", "POST"])
-# def upload_image():
-#     userId = "STdZUZOxxbPG1dJ8bK6i6ywboez1"
-#     if request.method == "POST":
-#         if request.files:
-#             productId = generatePrivateUniqueId(length=5)
-#             uploadedFile = request.files['uploadedFile']
-#             name = request.form['name']
-#             price = request.form['price']
-#             desc = "" if not 'desc' in request.form else request.form['desc']
-
-#             imagePath = f"images/{secure_filename(uploadedFile.filename)}"
-#             image_blob = storage.bucket().blob(imagePath)
-#             image_blob.upload_from_file(uploadedFile)
-
-#             # Get the URL of the uploaded image
-#             imageUrl = image_blob.public_url
-#             db.child('products').child(f"productId-{productId}").set({
-#                 'imagePath': imagePath,
-#                 'imageUrl': imageUrl,
-#                 'name': name,
-#                 'productId': productId,
-#                 'ownedBy': userId,
-#                 'price': int(price),
-#                 'desc': desc
-#             })
-#             db.child('users').child(userId).child('productsOwned').child(productId).set(productId)
-#             return redirect(request.url)
-#     return render_template("upload_image.html")
-    
 if __name__ == '__main__':
     app.run(debug=True, host=os.getenv("HOST"), port=os.getenv("PORT"))
