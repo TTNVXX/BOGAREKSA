@@ -264,7 +264,7 @@ async def products():
                     'msg': 'Product has been uploaded'
                 },
                 'data' : result[0]
-            }
+            }, 201
         elif request.method == 'DELETE':
             productId = request.args.get('id')
             deleteAll = request.args.get('all')
