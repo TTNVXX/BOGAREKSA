@@ -81,6 +81,7 @@ def loginMethod(email, password):
         user = auth.sign_in_with_email_and_password(email, password)
         loginDetail = auth.get_account_info(user['idToken'])['users'][0]
         del loginDetail['providerUserInfo']
+        loginDetail['role'] = db.child('users').child(loginDetail['localId']).child('role').get().val()
         encrypted_id = cipher_suite.encrypt(loginDetail['localId'].encode())
         encoded_id = base64.urlsafe_b64encode(encrypted_id).decode()
         apiToken = create_access_token(identity=encoded_id)
