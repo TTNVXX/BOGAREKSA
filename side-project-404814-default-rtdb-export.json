@@ -1,29 +1,236 @@
 {
-  "products": {
-    "lastId": 0
-  },
   "users": {
-    "STdZUZOxxbPG1dJ8bK6i6ywboez1": {
-      "email": "radenrizqy@bogareksa.rdnet.id",
-      "localId": "STdZUZOxxbPG1dJ8bK6i6ywboez1",
-      "productsOwned": [
-        "productId-1",
-        "productId-2"
-      ],
-      "registeredAt": "2023-12-06 11:59:48",
+    "VQk0MxKZnCg301nJrONHo1gZpZx2": {
+      "email": "wudd404@gmail.com",
+      "localId": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+      "products": {
+        "64un4": {
+          "desc": "",
+          "imagePath": "images/20231212_222022.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_222022.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "64un4"
+        },
+        "c0xef": {
+          "desc": "",
+          "imagePath": "images/20231212_225715.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_225715.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "c0xef"
+        },
+        "dcncv": {
+          "desc": "",
+          "imagePath": "images/20231212_225940.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_225940.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictedData": {
+            "status": {
+              "code": 200,
+              "detected_date": "2023-01-01",
+              "message": "Detected date is expired."
+            }
+          },
+          "price": 9000,
+          "productId": "dcncv"
+        },
+        "gc4iu": {
+          "desc": "",
+          "imagePath": "images/20231212_221356.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_221356.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictionData": {
+            "responseCode": 400,
+            "statusMsg": "Error decoding image. Please make sure the file is a valid image."
+          },
+          "price": 9000,
+          "productId": "gc4iu"
+        },
+        "gol7d": {
+          "desc": "",
+          "imagePath": "images/20231212_221501.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_221501.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictionData": {
+            "responseCode": 400,
+            "statusMsg": "Error decoding image. Please make sure the file is a valid image."
+          },
+          "price": 9000,
+          "productId": "gol7d"
+        },
+        "h4fzy": {
+          "desc": "",
+          "imagePath": "images/20231212_230214.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_230214.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictedData": {
+            "message": "Detected date is not a valid date."
+          },
+          "price": 9000,
+          "productId": "h4fzy"
+        },
+        "i13mn": {
+          "desc": "",
+          "imagePath": "images/20231212_230204.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_230204.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictedData": {
+            "detectedDate": "2023-01-01",
+            "message": "Detected date is expired."
+          },
+          "price": 9000,
+          "productId": "i13mn"
+        },
+        "npvio": {
+          "desc": "",
+          "imagePath": "images/20231212_135850.jpg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_135850.jpg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "chitato",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "npvio"
+        },
+        "nxuyj": {
+          "desc": "",
+          "imagePath": "images/20231212_140122.jpg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_140122.jpg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "nxuyj"
+        },
+        "nybvo": {
+          "desc": "",
+          "imagePath": "images/20231212_221338.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_221338.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictionData": {
+            "responseCode": 400,
+            "statusMsg": "Error decoding image. Please make sure the file is a valid image."
+          },
+          "price": 9000,
+          "productId": "nybvo"
+        },
+        "rd638": {
+          "desc": "",
+          "imagePath": "images/20231212_225948.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_225948.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictedData": {
+            "status": {
+              "code": 200,
+              "message": "Detected date is not a valid date."
+            }
+          },
+          "price": 9000,
+          "productId": "rd638"
+        },
+        "ssdsk": {
+          "desc": "",
+          "imagePath": "images/20231212_225847.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_225847.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "ssdsk"
+        },
+        "ubojn": {
+          "desc": "",
+          "imagePath": "images/20231212_140210.png",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_140210.png?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "bowden",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 200,
+          "productId": "ubojn"
+        },
+        "uqyrl": {
+          "desc": "",
+          "imagePath": "images/20231212_225832.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_225832.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "uqyrl"
+        },
+        "v5az7": {
+          "desc": "",
+          "imagePath": "images/20231212_135847.jpg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_135847.jpg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "v5az7"
+        },
+        "wsxbx": {
+          "desc": "",
+          "imagePath": "images/20231212_230014.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_230014.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictedData": {
+            "status": {
+              "code": 200,
+              "detected_date": "2023-01-01",
+              "message": "Detected date is expired."
+            }
+          },
+          "price": 9000,
+          "productId": "wsxbx"
+        },
+        "zo6uh": {
+          "desc": "",
+          "imagePath": "images/20231212_221319.jpg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_221319.jpg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "predictionData": {
+            "responseCode": 400,
+            "statusMsg": "Error decoding image. Please make sure the file is a valid image."
+          },
+          "price": 9000,
+          "productId": "zo6uh"
+        }
+      },
+      "registeredAt": "2023-12-10 15:43:33",
       "role": 2,
-      "username": "raden"
+      "username": "wudd404"
     },
-    "phQ7BYsbVyd63ZKvptboBsm3bqa2": {
-      "email": "app-dev@bogareksa.rdnet.id",
-      "localId": "phQ7BYsbVyd63ZKvptboBsm3bqa2",
-      "productsOwned": [
-        "productId-3",
-        "productId-4"
-      ],
-      "registeredAt": "2023-12-06 12:28:37",
+    "yTdEHkKfrefkyEHjYYe6M4zYgw43": {
+      "email": "bogadev@rdnet.id",
+      "localId": "yTdEHkKfrefkyEHjYYe6M4zYgw43",
+      "products": {
+        "asker": {
+          "desc": "",
+          "imagePath": "images/20231212_222022.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_222022.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "64un4"
+        },
+        "ragob": {
+          "desc": "",
+          "imagePath": "images/20231212_225715.jpeg",
+          "imageUrl": "https://firebasestorage.googleapis.com/v0/b/side-project-404814.appspot.com/o/images%2F20231212_225715.jpeg?alt=media&token=VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "name": "oreo",
+          "ownedBy": "VQk0MxKZnCg301nJrONHo1gZpZx2",
+          "price": 9000,
+          "productId": "c0xef"
+        }
+      },
+      "registeredAt": "2023-12-11 19:42:23",
       "role": 1,
-      "username": "app-dev"
+      "username": "bogadevelopers"
     }
   }
 }

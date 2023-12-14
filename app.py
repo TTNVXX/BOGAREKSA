@@ -1,6 +1,6 @@
 import pyrebase, json, os, random
 from requests.exceptions import HTTPError
-from flask import Flask, send_from_directory, request, send_file
+from flask import Flask, send_from_directory, request, send_file, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
@@ -509,6 +509,17 @@ async def process_upload(request, userId):
 
     return data
 
+def get_all_products():
+    all_products = []
+
+    users = db.child("users").get()
+    for user_id, user_data in users.val().items():
+        products = user_data.get("products", {})
+        for product_id, product_data in products.items():
+            all_products.append(product_data)
+
+    return all_products
+
 @app.route('/products', methods=['GET', 'POST', 'DELETE'])
 @jwt_required()
 async def products():
@@ -581,10 +592,14 @@ async def products():
                     'msg':'Product has been deleted'
                 }, 200
     else:
-        return {
-            'status': 401,
-            'msg': 'Unauthorized'
-        }, 401
+            return {
+                'status': 401,
+                'msg': 'Unauthorized'
+            }, 401
+
+@app.route('/all-products')
+def allProducts():
+    return jsonify(get_all_products()), 200
 
 @app.route('/reset-password', methods=['GET', 'POST']) # Need Token Auth...
 def resetPassword():
