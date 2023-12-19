@@ -4,6 +4,7 @@ from flask import Flask, send_from_directory, request, send_file, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv, dotenv_values
+import uuid
 # import firebase_admin
 # from firebase_admin import credentials, db, storage
 from cryptography.fernet import Fernet
@@ -25,8 +26,6 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 from google.cloud import vision
 from google.oauth2.service_account import Credentials
-
-
 
 load_dotenv()
 
@@ -64,10 +63,6 @@ cipher_suite = Fernet(app.config['JWT_SECRET_KEY'])
 api = Api(app)
 jwt = JWTManager(app)
 CORS(app)
-# cred = credentials.Certificate("key/priv_key.json")
-# firebase_admin.initialize_app(cred, {'storageBucket': 'side-project-404814.appspot.com'})
-
-# model = load_model()
 
 def generatePrivateUniqueId(length, adder=''):
     characters = 'qwertyuiopasdfghjklzxcvbnm' + '1234567890'
@@ -77,23 +72,22 @@ def generatePrivateUniqueId(length, adder=''):
     else:
         return unique_id
 
-def registerMethod(email, password):
+def registerMethod(email, password, username, storename):
     try:
         user = auth.create_user_with_email_and_password(email, password)
         registerDetail = auth.get_account_info(user['idToken'])['users'][0]
         userData = {
             'localId': registerDetail['localId'],
-            'email': request.form['email'],
+            'email': email,
             'role': 1,
-            'username': str(request.form['email']).split('@')[0] if not 'username' in request.form else request.form['username'],
+            'username': username,
+            'storename': storename,
             'registeredAt': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
-        userNameByEmail = True if not 'username' in request.form else False
         return {
             'msg': 'CREATED', 
             'desc': 'Successfully registered!', 
-            'registerDetail': db.child('users').child(registerDetail['localId']).set(userData),
-            'userNameByEmail': userNameByEmail
+            'registerDetail': db.child('users').child(registerDetail['localId']).set(userData)
         }, 201
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
@@ -119,8 +113,8 @@ def loginMethod(email, password):
         return {
             'msg': 'OK', 
             'desc': 'Successfully signed in!',
-            'apiToken':apiToken,
-            'loginDetail':loginDetail
+            'apiToken': apiToken,
+            'loginDetail': loginDetail
         }, 200
     except HTTPError as e:
         errMsg = json.loads(e.strerror)['error']['message']
@@ -185,7 +179,9 @@ def register():
         elif request.method == 'POST':
             email = request.form['email']
             password = request.form['password']
-            return registerMethod(email, password)
+            username = str(request.form['email']).split('@')[0] if not 'username' in request.form else request.form['username']
+            storename = str(request.form['email']).split('@')[0] if not 'storename' in request.form else request.form['storename']
+            return registerMethod(email, password, username, storename)
     except Exception as e:
             return {
                 'status': {
@@ -462,7 +458,7 @@ def prediction(image):
             "data": None,
         }, 400
 
-async def process_upload(request, userId):
+def process_upload(request, userId):
     productId = generatePrivateUniqueId(length=5)
     uploadedFile = request.files['uploadedFile']
     name = request.form['name']
@@ -474,7 +470,7 @@ async def process_upload(request, userId):
 
     storage.child(imagePath).put(uploadedFile)
     
-    predictedData = prediction(uploadedFile)
+    # predictedData = prediction(uploadedFile)
 
     # If the predict function returns an error response, return that response
     imageUrl = storage.child(imagePath).get_url(userId)
@@ -490,20 +486,19 @@ async def process_upload(request, userId):
     #     'detectedDate': image_response['status']['detected_date'],
     #     'data': image_response['data']
     # }
-    predictedData = {
-        'detectedDate': predictedData['status']['detected_date'],
-        'message': predictedData['status']['message'],
-        'data': predictedData['data']
-    }
+    # predictedData = {
+    #     'detectedDate': predictedData['status']['detected_date'],
+    #     'message': predictedData['status']['message'],
+    #     'data': predictedData['data']
+    # }
     data = {
         'imagePath': imagePath,
         'imageUrl': imageUrl,
         'name': name,
         'productId': productId,
-        'ownedBy': userId,
+        'ownerId': userId,
         'price': int(price),
         'desc': desc,
-        'predictedData': predictedData
     }
     db.child('users').child(userId).child('products').child(productId).set(data)
 
@@ -520,26 +515,35 @@ def get_all_products():
 
     return all_products
 
-@app.route('/products', methods=['GET', 'POST', 'DELETE'])
+@app.route('/products', methods=['GET', 'POST', 'DELETE', 'PUT'])
 @jwt_required()
-async def products():
+def products():
     encoded_id = get_jwt_identity()
     decoded_id = base64.urlsafe_b64decode(encoded_id)
     userId = (cipher_suite.decrypt(decoded_id).decode())
     if userId:
+        # GET REQUEST
         if request.method == 'GET':
             productId = request.args.get('id')
             try:
-                myProducts = list(map(lambda x: db.child('users').child(userId).child('products').child(x).get().val(), list(db.child('users').child(userId).child('products').get().val())))
-                myProduct = db.child('users').child(userId).child('products').child(productId).get().val()
                 if productId is None:
                     return {
-                        'myProducts': myProducts,
-                    }, 200
+                        'myProducts': list(
+                                        map(
+                                            lambda x: db.child('products').child(x).get().val(),
+                                            db.child('users').child(userId).child('products').get().val()
+                                        )
+                                    ),
+                        }, 200
                 else:
                     return {
-                        'myProduct': myProduct,
-                    }, 200
+                        'myProduct': dict(
+                                        filter(
+                                            lambda x: x[1]['ownerId'] == userId and x[0] == productId,
+                                            list(db.child('products').get().val().items())
+                                        )
+                                    )
+                        }, 200
             except Exception as e:
                 if '\'NoneType\' object is not iterable' == str(e):
                     return {
@@ -550,9 +554,10 @@ async def products():
                         'errMsg': str(e)
                     }, 400
       
+        # POST REQUEST
         elif request.method == 'POST':
             try:
-                result = await asyncio.gather(process_upload(request, userId))
+                result = process_upload(request, userId)
                 return {
                     'status': {
                         'code': 201,
@@ -597,9 +602,46 @@ async def products():
                 'msg': 'Unauthorized'
             }, 401
 
-@app.route('/all-products')
+@app.route('/prediction', methods=['GET', 'POST'])
+def prediction():
+    ...
+
+@app.route('/user', methods=['GET', 'PUT', 'DELETE'])
+def currentUser():
+    ...
+
+@app.route('/get-url', methods=['GET'])
+def getUrlPath():
+    print(storage.child(request.args.get('path')).get_url(uuid.uuid4()))
+    return storage.child(request.args.get('path')).get_url(uuid.uuid4())
+
+# @app.route('/gets', methods=['GET'])
+# def getters():
+#     productId = request.args.get('id')
+#     userId = request.args.get('user')
+#     # return list(
+#     #     filter(
+#     #         lambda x: db.child('products').child(productId).get().val()
+#     #         if x['ownerId'] == userId else 0,
+#     #         db.child('products').order_by_child('ownerId').get().val()
+#     #     )
+#     # )
+#     res = dict(
+#             filter(
+#                 lambda val: val[1]['ownerId'] == userId and val[0] == productId,
+#                 list(db.child('products').get().val().items())
+#             )
+#         )
+#     # return {"result": list(db.child('products').get().val().items()) }, 200
+#     return {"result": res}, 200
+
+@app.route('/all-products', methods=['GET'])
 def allProducts():
-    return jsonify(get_all_products()), 200
+    return list(
+        map(lambda x: x[1],
+            db.child('products').get().val().items()
+        )
+    )
 
 @app.route('/reset-password', methods=['GET', 'POST']) # Need Token Auth...
 def resetPassword():
