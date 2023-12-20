@@ -407,6 +407,15 @@ def prediction_route():
                 return send_file(cropped_image, mimetype='image/jpeg', download_name='cropped_image.jpg', as_attachment=True)
 
             # If the predict function returns an error response, return that response
+            # predictionId = generatePrivateUniqueId(legth=5)
+            # new_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}.{image.filename.split('.')[-1]}"
+            # predictionPath = f"images/{secure_filename(new_filename)}"
+            # data = {
+            #     "predictionId": predictionId,
+            #     "predictionPath": predictionPath
+            # }
+            # db.child('predictions').child(predictionId).set(data)
+            # storage.child(predictionPath).put(image)
             return cropped_image
 
         else:
@@ -472,16 +481,14 @@ async def process_upload(request, userId):
     
     predictedData = prediction(uploadedFile)
 
-    
-
     predictedData = {
         'detectedDate': predictedData['status']['detected_date'],
         'message': predictedData['status']['message']
     }
-
-    if predictedData['message'] == 'Detected date is valid.':
-        imageUrl = storage.child(imagePath).get_url(userId)
-        storage.child(imagePath).put(uploadedFile)
+    statusTrue = predictedData['message'] == 'Detected date is valid.'
+    if predictedData['message'] == 'Detected date is expired.' or statusTrue:
+        # storage.child(imagePath).put(uploadedFile)
+        imageUrl = storage.child(imagePath).get_url(uuid.uuid4())
         data = {
             'imagePath': imagePath,
             'imageUrl': imageUrl,
@@ -490,13 +497,15 @@ async def process_upload(request, userId):
             'ownerId': userId,
             'price': int(price),
             'desc': desc,
+            'addedDate': datetime.now().strftime('%Y%m%d_%H%M%S'),
             'predictionResult': predictedData
         }
 
-        lastProduct = db.child('users').child(userId).child('products').get().val().__len__()
-        db.child('products').child(productId).set(data)
+        lastProduct = lastProduct = len(db.child('users').child(userId).child('products').get().val()) if db.child('users').child(userId).child('products').get().val() else 0
         db.child('users').child(userId).child('products').child(lastProduct).set(productId)
-        return data
+        return db.child('products').child(productId).set(data)
+    elif predictedData['message'] == 'No text detected':
+        return 'No text detected'
     else:
         return predictedData
 
@@ -554,22 +563,13 @@ async def products():
         elif request.method == 'POST':
             try:
                 result = await asyncio.gather(process_upload(request, userId))
-                if result['data']['message'] == 'Detected date is expired':
-                    return {
-                        'status': {
-                            'code': 200,
-                            'msg': 'Product has not been uploaded'
-                        },
-                        'data' : result[0]
-                    }, 201
-                else:
-                    return {
-                        'status': {
-                            'code': 201,
-                            'msg': 'Product has been uploaded'
-                        },
-                        'data' : result[0]
-                    }, 201
+                return {
+                    'status': {
+                        'code': 200,
+                        'msg': 'Product has been uploaded'
+                    },
+                    'data' : result[0]
+                }, 201
             except Exception as e:
                 return {
                     'status': {
@@ -586,16 +586,19 @@ async def products():
                     'msg':'Nothing to delete'
                 }, 200
             elif deleteAll == 'true':
-                allMyProducts = list(map(lambda x: db.child('users').child(userId).child('products').child(x).child('imagePath').get().val(), list(db.child('users').child(userId).child('products').get().val())))
+                allMyProducts = db.child('users').child(userId).child('products').get().val()
                 for i in allMyProducts:
-                    storage.delete(i, userId)
+                    imagePath = db.child('products').child(i).child('imagePath').get().val()
+                    storage.delete(imagePath, userId)
+                    db.child('products').child(i).remove()
                 db.child('users').child(userId).child('products').remove()
                 return {
                     'msg': 'All products have been requested to delete'
                 }, 200
             else:
-                getFilePath = db.child('users').child(userId).child('products').child(productId).child('imagePath').get().val()
+                getFilePath = db.child('products').child(productId).child('imagePath').get().val()
                 storage.delete(getFilePath, userId)
+                db.child('products').child(i).remove()
                 db.child('users').child(userId).child('products').child(productId).remove()
                 return {
                     'filePath': getFilePath,
@@ -607,41 +610,15 @@ async def products():
                 'msg': 'Unauthorized'
             }, 401
 
-# @app.route('/prediction', methods=['GET', 'POST'])
-# def prediction():
-#     ...
-
 @app.route('/user', methods=['GET', 'PUT', 'DELETE'])
 def currentUser():
     ...
 
-@app.route('/get-url', methods=['GET'])
-def getUrlPath():
-    # print(storage.child(request.args.get('path')).get_url(uuid.uuid4()))
-    # return storage.child(request.args.get('path')).get_url(uuid.uuid4())
+@app.route('/unend', methods=['GET'])
+def unEnd():
     return {
         "res": len(db.child('users').child('VQk0MxKZnCg301nJrONHo1gZpZx2').child('products').get().val())
     }
-    #len(list(db.child('users').child('VQk0MxKZnCg301nJrONHo1gZpZx2').child('products').get().val()))
-# @app.route('/gets', methods=['GET'])
-# def getters():
-#     productId = request.args.get('id')
-#     userId = request.args.get('user')
-#     # return list(
-#     #     filter(
-#     #         lambda x: db.child('products').child(productId).get().val()
-#     #         if x['ownerId'] == userId else 0,
-#     #         db.child('products').order_by_child('ownerId').get().val()
-#     #     )
-#     # )
-#     res = dict(
-#             filter(
-#                 lambda val: val[1]['ownerId'] == userId and val[0] == productId,
-#                 list(db.child('products').get().val().items())
-#             )
-#         )
-#     # return {"result": list(db.child('products').get().val().items()) }, 200
-#     return {"result": res}, 200
 
 @app.route('/all-products', methods=['GET'])
 def allProducts():
