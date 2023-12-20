@@ -472,27 +472,33 @@ async def process_upload(request, userId):
     
     predictedData = prediction(uploadedFile)
 
-    imageUrl = storage.child(imagePath).get_url(userId)
+    
 
     predictedData = {
         'detectedDate': predictedData['status']['detected_date'],
-        'message': predictedData['status']['message'],
-        'data': predictedData['data']
-    }
-    data = {
-        'imagePath': imagePath,
-        'imageUrl': imageUrl,
-        'name': name,
-        'productId': productId,
-        'ownerId': userId,
-        'price': int(price),
-        'desc': desc,
+        'message': predictedData['status']['message']
     }
 
-    db.child('products').child(productId).set(data)
-    db.child('users').child(userId).child('products').child(len(db.child('users').child('VQk0MxKZnCg301nJrONHo1gZpZx2').child('products').get().val())).set(productId)
+    if predictedData['message'] == 'Detected date is valid.':
+        imageUrl = storage.child(imagePath).get_url(userId)
+        storage.child(imagePath).put(uploadedFile)
+        data = {
+            'imagePath': imagePath,
+            'imageUrl': imageUrl,
+            'name': name,
+            'productId': productId,
+            'ownerId': userId,
+            'price': int(price),
+            'desc': desc,
+            'predictionResult': predictedData
+        }
 
-    return data
+        lastProduct = db.child('users').child(userId).child('products').get().val().__len__()
+        db.child('products').child(productId).set(data)
+        db.child('users').child(userId).child('products').child(lastProduct).set(productId)
+        return data
+    else:
+        return predictedData
 
 def get_all_products():
     all_products = []
@@ -548,13 +554,22 @@ async def products():
         elif request.method == 'POST':
             try:
                 result = await asyncio.gather(process_upload(request, userId))
-                return {
-                    'status': {
-                        'code': 201,
-                        'msg': 'Product has been uploaded'
-                    },
-                    'data' : result[0]
-                }, 201
+                if result['data']['message'] == 'Detected date is expired':
+                    return {
+                        'status': {
+                            'code': 200,
+                            'msg': 'Product has not been uploaded'
+                        },
+                        'data' : result[0]
+                    }, 201
+                else:
+                    return {
+                        'status': {
+                            'code': 201,
+                            'msg': 'Product has been uploaded'
+                        },
+                        'data' : result[0]
+                    }, 201
             except Exception as e:
                 return {
                     'status': {
@@ -592,9 +607,9 @@ async def products():
                 'msg': 'Unauthorized'
             }, 401
 
-@app.route('/prediction', methods=['GET', 'POST'])
-def prediction():
-    ...
+# @app.route('/prediction', methods=['GET', 'POST'])
+# def prediction():
+#     ...
 
 @app.route('/user', methods=['GET', 'PUT', 'DELETE'])
 def currentUser():
