@@ -458,7 +458,7 @@ def prediction(image):
             "data": None,
         }, 400
 
-def process_upload(request, userId):
+async def process_upload(request, userId):
     productId = generatePrivateUniqueId(length=5)
     uploadedFile = request.files['uploadedFile']
     name = request.form['name']
@@ -470,27 +470,15 @@ def process_upload(request, userId):
 
     storage.child(imagePath).put(uploadedFile)
     
-    # predictedData = prediction(uploadedFile)
+    predictedData = prediction(uploadedFile)
 
-    # If the predict function returns an error response, return that response
     imageUrl = storage.child(imagePath).get_url(userId)
 
-    # predictionResponseCode = image_response['status']['code']
-    # predictionResponseMsg = image_response['status']['message']
-    # predictionResponseDate = image_response['status']['detected_date']
-    # predictionData = image_response['data']
-
-    # predictionData = {
-    #     'responseCode': image_response['status']['code'],
-    #     'statusMsg': image_response['status']['message'],
-    #     'detectedDate': image_response['status']['detected_date'],
-    #     'data': image_response['data']
-    # }
-    # predictedData = {
-    #     'detectedDate': predictedData['status']['detected_date'],
-    #     'message': predictedData['status']['message'],
-    #     'data': predictedData['data']
-    # }
+    predictedData = {
+        'detectedDate': predictedData['status']['detected_date'],
+        'message': predictedData['status']['message'],
+        'data': predictedData['data']
+    }
     data = {
         'imagePath': imagePath,
         'imageUrl': imageUrl,
@@ -500,7 +488,9 @@ def process_upload(request, userId):
         'price': int(price),
         'desc': desc,
     }
-    db.child('users').child(userId).child('products').child(productId).set(data)
+
+    db.child('products').child(productId).set(data)
+    db.child('users').child(userId).child('products').child(len(db.child('users').child('VQk0MxKZnCg301nJrONHo1gZpZx2').child('products').get().val())).set(productId)
 
     return data
 
@@ -517,7 +507,7 @@ def get_all_products():
 
 @app.route('/products', methods=['GET', 'POST', 'DELETE', 'PUT'])
 @jwt_required()
-def products():
+async def products():
     encoded_id = get_jwt_identity()
     decoded_id = base64.urlsafe_b64decode(encoded_id)
     userId = (cipher_suite.decrypt(decoded_id).decode())
@@ -557,7 +547,7 @@ def products():
         # POST REQUEST
         elif request.method == 'POST':
             try:
-                result = process_upload(request, userId)
+                result = await asyncio.gather(process_upload(request, userId))
                 return {
                     'status': {
                         'code': 201,
@@ -612,9 +602,12 @@ def currentUser():
 
 @app.route('/get-url', methods=['GET'])
 def getUrlPath():
-    print(storage.child(request.args.get('path')).get_url(uuid.uuid4()))
-    return storage.child(request.args.get('path')).get_url(uuid.uuid4())
-
+    # print(storage.child(request.args.get('path')).get_url(uuid.uuid4()))
+    # return storage.child(request.args.get('path')).get_url(uuid.uuid4())
+    return {
+        "res": len(db.child('users').child('VQk0MxKZnCg301nJrONHo1gZpZx2').child('products').get().val())
+    }
+    #len(list(db.child('users').child('VQk0MxKZnCg301nJrONHo1gZpZx2').child('products').get().val()))
 # @app.route('/gets', methods=['GET'])
 # def getters():
 #     productId = request.args.get('id')
