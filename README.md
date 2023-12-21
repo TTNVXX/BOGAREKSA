@@ -8,6 +8,7 @@ Welcome to the Exp Date Detection repository! This project aims to detect expira
 * [Python Libraries](#python-libraries)
 * [Contact](#contact)
 * [Documentation](#documentation)
+* [Source](#source)
 
 
 # Info
@@ -58,3 +59,7 @@ A function (show_image_with_bounding_box) is defined to display images with boun
 
 ## Visualization:
 Images from the dataset are visualized along with their annotated bounding boxes to provide an understanding of the dataset.
+
+## Source:
+[Model](https://drive.google.com/drive/folders/1rOrBYEq_pdEl_xHz1DotmyOmGEx7rNBH?usp=drive_link) 
+[Dataset](https://drive.google.com/drive/folders/1nD2TZwt2oXS8G_bNXSx3XVPvOUZIkvtc?usp=drive_link)
