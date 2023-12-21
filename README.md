@@ -1,11 +1,9 @@
-# BOGAREKSA
-
 <h1 align="center">This is Flask RESTful API for Bogareksa</h1>
 <h3 align="center">https://boga.rdnet.id</h3>
 
-- This work is part of **Bogareksa Capstone Project**
+This work is part of **Bogareksa Capstone Project**
 
-<h3 align="left">Connect with me:</h3>
+This API has endpoints to make it work for the mobile development, it's integrated with Firebase, Cloud Storage, Cloud Vision. The API is deployed on the Google Cloud Compute Engine. The deployment is helped with Cloudflare to proxy the IPv4 using already owned domain.
 <p align="left">
 </p>
 
