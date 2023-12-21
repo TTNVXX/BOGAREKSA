@@ -27,9 +27,9 @@ After obtaining the bounding boxes from the VGG16 model, we use the Cloud Vision
 
 # Contact
 For any inquiries or feedback, feel free to reach out to us :
-- leonvirmus17@gmail.com (Leonardus Virmus Danar)
-- putuartoya@students.amikom.ac.id (I Putu Artoya)
-- tegarfadillah1@gmail.com (Tegar Fadillah Zanestri)
+- leonvirmus17@gmail.com (Leonardus Virmus Danar)(M227BSY1145)
+- tegarfadillah1@gmail.com (Tegar Fadillah Zanestri)(M012BSY0534)
+- putuartoya@students.amikom.ac.id (I Putu Artoya)(M183BSY1342)
 
 # Documentation
 
