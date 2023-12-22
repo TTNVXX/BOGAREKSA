@@ -54,7 +54,7 @@
     <td>Universitas Amikom Yogyakarta</td>
   </tr>
 
-    <!-- Row for the fourth member -->
+  <!-- Row for the fourth member -->
   <tr>
     <td>4</td>
     <td>CC</td>
@@ -63,7 +63,7 @@
     <td>Universitas Jember</td>
   </tr>
 
-    <!-- Row for the fifth member -->
+  <!-- Row for the fifth member -->
   <tr>
     <td>5</td>
     <td>CC</td>
@@ -72,7 +72,7 @@
     <td>Universitas Muhammadiyah Metro</td>
   </tr>
 
-    <!-- Row for the sixth member -->
+  <!-- Row for the sixth member -->
   <tr>
     <td>6</td>
     <td>MD</td>
