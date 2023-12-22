@@ -25,7 +25,6 @@
     <th>Bangkit ID</th>
     <th>Name</th>
     <th>University</th>
-    <th>Profile</th>
   </tr>
 
   <!-- Row for the first member -->
