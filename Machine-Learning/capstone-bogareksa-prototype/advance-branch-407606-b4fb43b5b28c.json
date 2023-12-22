@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "advance-branch-407606",
+  "private_key_id": "b4fb43b5b28c33d55f46754af6abadfb48d49192",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCe7EVl2ega7e6W\nYW3mWqnB48e36nfrpHHjAWhfOPqojVRNs5e+uOtWtYe5k9hYyNOGv1tg+RsuNvwT\nwYrEdOXcQGw/Zg6tK+YDsD3CWnJH8VbXJVL07PywixD4uhvVMb+QPkIpXqiA4bh5\n6mkb1rku7UGDyctzqKeOz+emJrUye0NHwKcyuQZghEFxbra/Fux4TfLheoonUifE\nC0diGnOTJ8Z3E7e71ejN9DrvZ5ygG4ROAun+ldm1ijPcDORD8ZS0avnMhksqzWGG\nEdY6DrFkf3+RKvkpYFWCv6usQcR+eGlq2Vvd1oCYQNKt5j00oiuA4+sgMQTv1bTI\nYQllUu9bAgMBAAECggEALcQKxCb5gW/Nin7qQDERu+VVqXAbMr/7kAziurFU9d8l\nTO8QHvtvwluqh1W9Muw6hg5rSUTTf/6TnzjYNnUXkNL4mVVRmqsOpTdGwcZ8LJ2i\njXiRKDlrF4gkzgwCYeXerbJQKUu6KMtX7bwEouC2GX53pHUjYt5JyoWyxxVUjwGd\ny8cIJuCbuFwymSQpdcAW/lLziJZFQUGVCIpSHxJMCOzspIuyEEngzHn/0ehtDo0L\nfDJ42G+Ly1GvVw8Hzzcv1WjYOhxhQSXUTv/x0N2KE2g2bAHUGz1RtlUMEdU1g4lO\nIPt5ZiNN2xgyAyjMrD1rZYQP43JSmAd1ZGzqS3/kkQKBgQDYYzrqCw3AEHknMG5Q\nFlH0sdfJBTBqS0ueurDlxw8lBFw1xyFDM4fWA9S+FD9pqcfo+LUqyj5D1Q/IX03e\nL481ftqZtEVZ5BtYPPElRGumHAkT1o0nZsBiFjqx1CFzYnAJvzklFchUCGy1ydku\nseqEd9EQtt/rH+gSgcGzHMdViQKBgQC8BAVrzBX2t60WrpBn07TpQXo4n/HEtqT2\nhryzRXKLL/sdNST5YcT6MUvTV/kMw+uKY1fn8IBiR6fddVy2C+8Il79COgVLii1N\nizW0djHrDgzyXaEkHz//T534N9iY76qKQjINfzETQkfNP+zGmv8PZoMiJXcNp17B\nPq7fPKyIwwKBgA7CReRsuJVfCkRoAz4nJ5PfBW7KkdDOLew3o5UojJnjwD5SxKwG\nub8ZJ8uHKgQU9nOncwPmI3UQ9TCff3omGEh3zIUrTIejDVJpZbE7B3Se+OeHfL0x\nPvHxvjMe2uE515Zymn0zDSTeJjwH9m4+6FX8rh/LuV4aIQQSIZoL3nSxAoGAYERe\n0jcI9+5L/dUbs02+z7/q6JtcmzA5ftC2RcRFRecnWGkhqV7aEJC1Fl1w84xNSepb\n1DJcSfYOiWHSOpQZq/imwS4cD/WMBKxGr0Plg0kKb/5ox6oIhp0pcTKHAKeWVnxW\nTHrXkdjaEsmsXnR2LFh8xDsSnjcYWTHTMBJM9SkCgYAdn5/0HFyeWxxvKpMJxbBD\nAL//RcjjWG1ljUgtNso6QY3pNSoptrNQtqnfkiDrI6us1/agWDl8bDK9ODPjPnK0\ngzfPCLPsbCmr+tqgaUJZqPCllcelObfPz1YhyKnTLQnNFbkgYq/kwyBWfgFeQOo4\n3PdYDKQzwjwGdT48hfk18w==\n-----END PRIVATE KEY-----\n",
+  "client_email": "detection-bogareksa-prototype@advance-branch-407606.iam.gserviceaccount.com",
+  "client_id": "117566791811251815590",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/detection-bogareksa-prototype%40advance-branch-407606.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
