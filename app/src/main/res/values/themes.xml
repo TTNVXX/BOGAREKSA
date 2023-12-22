@@ -1,0 +1,9 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Bogareksa" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/dark_teal</item>
+    </style>
+
+    <style name="Theme.Bogareksa" parent="Base.Theme.Bogareksa" />
+</resources>

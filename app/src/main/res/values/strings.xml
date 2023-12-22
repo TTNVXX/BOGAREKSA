@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Bogareksa</string>
+    <string name="welcome_text">Selamat datang di Bogareksa</string>
+    <string name="register_header">Mohon lengkapi data diri anda di bawah ini</string>
+    <string name="register_text">don’t have account?</string>
+    <string name="login_text">Mohon isi data anda</string>
+
+    <string name="register"><u>register</u></string>
+    <string name="login">Masuk</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="name">Nama</string>
+    <string name="greeting">Halo %1$s,</string>
+    <string name="logout">Keluar</string>
+    <string name="logo">logo</string>
+    <string name="address">Alamat</string>
+    <string name="additional">Tambahan</string>
+    <string name="save">Save</string>
+    <string name="google_button">login google </string>
+
+    <string name="rupiah">Rp%s</string>
+    <string name="barang">%d barang</string>
+    <string name="exp">Expired at : %s</string>
+    <string name="toko">Toko:  </string>
+
+    <string name="error_empty_data">Data cannot be empty</string>
+    <string name="error_empty_name">Please insert your name</string>
+    <string name="error_empty_email">Please insert your email</string>
+    <string name="error_empty_password">Please insert your password</string>
+    <string name="error_invalid_email">Invalid email</string>
+    <string name="error_password_more_7">Password must more than 7 character</string>
+    <string name="product_title">Product</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+</resources>
